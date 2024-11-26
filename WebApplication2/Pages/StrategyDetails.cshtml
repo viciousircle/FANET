@@ -1,0 +1,15 @@
+﻿@* @page "{strategyId:int}" *@
+@page
+@model WebApplication2.Pages.StrategyDetailsModel
+@{
+    ViewData["Title"] = "Chi tiết chiến lược";
+}
+
+<h1>Chi tiết chiến lược</h1>
+
+<p>Thông tin chi tiết về chiến lược bạn đã chọn:</p>
+
+<p><strong>Chiến lược: </strong>@Model.SelectedStrategy</p>
+<p><strong>Mô tả:</strong> @Model.StrategyDescription</p>
+
+<a href="/ChooseStrategies" class="btn btn-primary">Quay lại trang chọn chiến lược</a>
