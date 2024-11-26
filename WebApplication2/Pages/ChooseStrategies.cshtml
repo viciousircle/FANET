@@ -1,0 +1,65 @@
+﻿@page
+@model WebApplication2.Pages.ChooseStrategiesModel
+@{
+    ViewData["Title"] = "Step 2";
+}
+
+<h1>Step 2</h1>
+
+<p>Chọn chiến lược bao phủ phù hợp</p>
+
+<p>Sau đây là một vài gợi ý các kịch bản:</p>
+<p>Kịch bản cứu hộ: sử dụng Option 1</p>
+
+@* Hiển thị một vài thông số cơ bản *@
+
+<div>
+    <h3>Option 1: Thuật toán 1</h3>
+    <p><strong>Công nghệ:</strong> Sử dụng UAV với thuật toán định tuyến tối ưu cho tình huống khẩn cấp.</p>
+    <p><strong>Ưu điểm:</strong> Tốc độ nhanh, phạm vi rộng, xử lý tình huống linh hoạt.</p>
+    <p><strong>Nhược điểm:</strong> Cần nhiều UAV, yêu cầu phần cứng mạnh mẽ.</p>
+    <button id="chooseOption1" onclick="chooseOption(1)">Choose</button>
+</div>
+
+<div>
+    <h3>Option 2: Thuật toán 2</h3>
+    <p><strong>Công nghệ:</strong> Sử dụng mạng cảm biến để thu thập dữ liệu và phân tích theo thời gian thực.</p>
+    <p><strong>Ưu điểm:</strong> Chính xác, dễ triển khai trong các khu vực hẹp.</p>
+    <p><strong>Nhược điểm:</strong> Phụ thuộc vào mạng cảm biến, chi phí triển khai cao.</p>
+    <button id="chooseOption2" onclick="chooseOption(2)">Choose</button>
+</div>
+
+<div>
+    <h3>Option 3: Thuật toán 3</h3>
+    <p><strong>Công nghệ:</strong> Sử dụng mô hình học máy để tối ưu hóa chiến lược bao phủ.</p>
+    <p><strong>Ưu điểm:</strong> Tự động hóa quá trình ra quyết định, giảm thiểu sai sót con người.</p>
+    <p><strong>Nhược điểm:</strong> Cần dữ liệu đào tạo lớn, chi phí tính toán cao.</p>
+    <button id="chooseOption3" onclick="chooseOption(3)">Choose</button>
+</div>
+
+<script>
+    function chooseOption(option) {
+        // Logic xử lý khi người dùng chọn một chiến lược
+        alert('Bạn đã chọn Option ' + option);
+        
+        // Gửi thông tin về lựa chọn tới controller hoặc thực hiện hành động khác
+        fetch('/ChooseStrategies/OnPostSelectStrategy', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ selectedOption: option })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Chiến lược đã được chọn thành công!');
+            } else {
+                alert('Lỗi khi chọn chiến lược.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
