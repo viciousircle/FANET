@@ -31,3 +31,4 @@
 /Users/a8888/Desktop/WebApplication2/WebApplication2/obj/Debug/net8.0/WebApplication2.pdb
 /Users/a8888/Desktop/WebApplication2/WebApplication2/obj/Debug/net8.0/WebApplication2.genruntimeconfig.cache
 /Users/a8888/Desktop/WebApplication2/WebApplication2/obj/Debug/net8.0/ref/WebApplication2.dll
+/Users/a8888/Desktop/WebApplication2/WebApplication2/obj/Debug/net8.0/WebApplication2.sourcelink.json
