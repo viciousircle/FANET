@@ -1,0 +1,222 @@
+﻿@* 
+@page
+@model MapViewerModel
+@{
+    ViewData["Title"] = "OSM Map Viewer";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSM Map Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload and View OSM Map</h2>
+    <form enctype="multipart/form-data" id="uploadForm">
+        <input type="file" id="fileInput" accept=".osm" />
+    </form>
+    <div id="map"></div>
+
+    <button id="saveMapButton">Save Map</button>
+
+    @if (!string.IsNullOrEmpty(Model.GeoJsonData))
+    {
+        <script>
+            // Sử dụng dữ liệu GeoJsonData đã lưu trong session
+            const geoJsonData = @Html.Raw(Json.Serialize(Model.GeoJsonData));
+
+            // Chuyển đổi dữ liệu GeoJSON từ chuỗi và hiển thị trên bản đồ
+            const geoJsonParsed = osmtogeojson(new DOMParser().parseFromString(geoJsonData, 'text/xml'));
+            const geoJsonLayer = L.geoJSON(geoJsonParsed);
+            geoJsonLayer.addTo(map);
+            map.fitBounds(geoJsonLayer.getBounds());
+        </script>
+    }
+
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([0, 0], 2);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Handle file upload
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const osmData = e.target.result;
+
+                // Convert OSM XML to GeoJSON
+                const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+
+                // Add GeoJSON to the map
+                const geoJsonLayer = L.geoJSON(geoJsonData);
+                geoJsonLayer.addTo(map);
+
+                // Zoom to the layer
+                map.fitBounds(geoJsonLayer.getBounds());
+            };
+            reader.readAsText(file);
+        });
+
+        // Handle saving the map data
+        document.getElementById('saveMapButton').addEventListener('click', function () {
+            // Convert the map data to GeoJSON
+            const geoJsonLayer = map.eachLayer(function (layer) {
+                if (layer instanceof L.GeoJSON) {
+                    const geoJsonData = layer.toGeoJSON();
+
+                    // Send the GeoJSON data to the server to save in session
+                    fetch('/MapViewer?handler=SaveGeoJson', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(geoJsonData),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Map saved successfully!');
+                        } else {
+                            alert('Failed to save map');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+ *@
+
+@page
+@model MapViewerModel
+@{
+    ViewData["Title"] = "OSM Map Viewer";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OSM Map Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload and View OSM Map</h2>
+    <form enctype="multipart/form-data" id="uploadForm">
+        <input type="file" id="fileInput" accept=".osm" />
+    </form>
+    <div id="map"></div>
+
+    <button id="saveMapButton">Save Map</button>
+
+    @if (!string.IsNullOrEmpty(Model.GeoJsonData))
+    {
+        <div id="successMessage" style="color: green; font-weight: bold;">
+            Map saved successfully!
+        </div>
+        <script>
+            // Sử dụng dữ liệu GeoJsonData đã lưu trong session
+            const geoJsonData = @Html.Raw(Json.Serialize(Model.GeoJsonData));
+
+            // Chuyển đổi dữ liệu GeoJSON từ chuỗi và hiển thị trên bản đồ
+            const geoJsonParsed = osmtogeojson(new DOMParser().parseFromString(geoJsonData, 'text/xml'));
+            const geoJsonLayer = L.geoJSON(geoJsonParsed);
+            geoJsonLayer.addTo(map);
+            map.fitBounds(geoJsonLayer.getBounds());
+        </script>
+    }
+
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([0, 0], 2);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Handle file upload
+        document.getElementById('fileInput').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const osmData = e.target.result;
+
+                // Convert OSM XML to GeoJSON
+                const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+
+                // Add GeoJSON to the map
+                const geoJsonLayer = L.geoJSON(geoJsonData);
+                geoJsonLayer.addTo(map);
+
+                // Zoom to the layer
+                map.fitBounds(geoJsonLayer.getBounds());
+            };
+            reader.readAsText(file);
+        });
+
+        // Handle saving the map data
+        document.getElementById('saveMapButton').addEventListener('click', function () {
+            const geoJsonLayer = map.eachLayer(function (layer) {
+                if (layer instanceof L.GeoJSON) {
+                    const geoJsonData = layer.toGeoJSON();
+
+                    fetch('/MapViewer?handler=SaveGeoJson', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(geoJsonData),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Map saved successfully!');
+                            document.getElementById('successMessage').style.display = 'block'; // Hiển thị thông báo thành công
+                        } else {
+                            alert('Failed to save map');
+                        }
+                    }) 
+                    .catch(error => {
+                        console.error('Error saving map:', error);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

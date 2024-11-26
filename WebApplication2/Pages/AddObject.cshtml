@@ -1,0 +1,62 @@
+﻿@page
+@model WebApplication2.Pages.AddObjectModel
+@{
+    ViewData["Title"] = "UAV";
+}
+
+<h2>Step 1: UAVs data & Add Map</h2>
+
+
+<h2>UAV data </h2>
+<!-- Form tải lên file JSON -->
+<form enctype="multipart/form-data" method="post">
+    <input type="file" name="JsonFile" accept=".json" />
+    <button type="submit">Upload</button>
+</form>
+
+@if (!ModelState.IsValid)
+{
+    <div style="color:red;">
+        <ul>
+            @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+@if (Model.UAVs != null && Model.UAVs.Any())
+{
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>X</th>
+            <th>Y</th>
+            <th>Z</th>
+        </tr>
+        @foreach (var uav in Model.UAVs)
+        {
+            <tr>
+                <td>@uav.Id</td>
+                <td>@uav.X</td>
+                <td>@uav.Y</td>
+                <td>@uav.Z</td>
+            </tr>
+        }
+    </table>
+}
+else
+{
+    <p>Vui lòng tải lên tệp JSON chứa thông tin UAVs.</p>
+    @* <p>Số UAV hiện tại: @Model.UAVs?.Count()</p> <!-- Hiển thị số UAVs --> *@
+}
+
+<h2>Add Map .OSM</h2>
+
+<a asp-area="" asp-page="/MapViewer">Add map</a>
+
+<a asp-area="" asp-page="/Index">Next step</a>
+
+
+

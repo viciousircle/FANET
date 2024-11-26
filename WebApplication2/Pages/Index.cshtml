@@ -1,0 +1,22 @@
+﻿@page
+@model IndexModel
+
+@{
+     ViewData["Title"] = "Welcome ! 🤖";
+}
+
+<h2>WELCOME TO OUR PROJECT</h2>
+
+<h2>FANET: Seamless Coverage Strategies</h2>
+
+<h3>Bạn biết cách sử dụng chưa?</h3>
+<div>Bước 1: Nhập dữ liệu UAV bằng file .json</div>
+<div>Bước 2: Chọn chiến lược bao phủ phù hợp</div>
+<div>Bước 3: Chạy chương trình</div>
+<div>Bước 4: Nhận bảng so sánh thống kê</div>
+
+@* <button>Start now!!!</button> *@
+
+@* <button onclick="location.href='@Url.Page("/Index")'" class="btn btn-primary">Start now!!!</button> *@
+
+<a asp-area="" asp-page="/AddObject">Start now!!</a>
