@@ -1,5 +1,5 @@
-﻿@* @page "{strategyId:int}" *@
-@page
+﻿@page "{strategyId:int}"
+@* @page *@
 @model WebApplication2.Pages.StrategyDetailsModel
 @{
     ViewData["Title"] = "Chi tiết chiến lược";
@@ -11,6 +11,15 @@
 
 <p><strong>Chiến lược: </strong>@Model.SelectedStrategy</p>
 <p><strong>Mô tả:</strong> @Model.StrategyDescription</p>
+
+@* <h3>Option @(strategy.Id): @(strategy.Name)</h3>
+        <p><strong>Công nghệ:</strong> @(strategy.Description)</p>
+        <div>
+            <div>UAVs: @(strategy.UAVCount)</div>
+            <div>Thời gian duy trì tối đa: @(strategy.MaxDuration)</div>
+            <div>Phạm vi tối đa: @(strategy.MaxRange)</div>
+            <div>Tốc độ truyền: @(strategy.TransmissionSpeed)</div>
+        </div> *@
 
 <a href="/ChooseStrategies" class="btn btn-primary">Quay lại trang chọn chiến lược</a>
 
