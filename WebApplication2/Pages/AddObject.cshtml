@@ -1,16 +1,12 @@
-﻿
-
-@page
+﻿@page
 @model WebApplication2.Pages.AddObjectModel
 @{
     ViewData["Title"] = "UAV";
 }
 <head>
-    @* <title>OSM Map Viewer</title> *@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
     <style>
@@ -20,13 +16,14 @@
         }
     </style>
 </head>
-<h2>Step 1: UAV Data & Add Map</h2>
 
-<!-- Form for uploading JSON file -->
-<h2>Upload UAV Data</h2>
+<h2>Step 1: Upload UAV Data & View Map</h2>
+
+<!-- Upload JSON File -->
+<h3>Upload UAV JSON File</h3>
 <form enctype="multipart/form-data" method="post">
     <input type="file" name="JsonFile" accept=".json" />
-    <button type="submit">Upload</button>
+    <button type="submit">Upload JSON</button>
 </form>
 
 @if (!ModelState.IsValid)
@@ -43,6 +40,7 @@
 
 @if (Model.UAVs != null && Model.UAVs.Any())
 {
+    <h3>UAV Data</h3>
     <table>
         <tr>
             <th>Id</th>
@@ -61,81 +59,72 @@
         }
     </table>
 }
-else
-{
-    <p>Please upload a JSON file containing UAV data.</p>
-}
 
-<h2>Upload and View Map (.OSM)</h2>
+<h3>Upload and View OSM Map</h3>
 <form enctype="multipart/form-data" id="osmUploadForm">
     <input type="file" id="osmFileInput" accept=".osm" />
 </form>
 
-<div id="map" style="height: 500px; margin-top: 20px;"></div>
+<div id="map"></div>
 <button id="saveMapButton">Save Map</button>
 
 @if (!string.IsNullOrEmpty(Model.GeoJsonData))
 {
-    <div id="successMessage" style="color: green; font-weight: bold;">
-        Map saved successfully!
-    </div>
+    <div style="color:green; font-weight: bold;">Map saved successfully!</div>
 }
 
 <a asp-page="/ChooseStrategies">Next Step</a>
 
-<script src="https://cdn.jsdelivr.net/npm/leaflet"></script>
-<script src="https://unpkg.com/osmtogeojson"></script>
 <script>
     // Initialize the map
     const map = L.map('map').setView([0, 0], 2);
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
     // Handle OSM file upload
     document.getElementById('osmFileInput').addEventListener('change', function (event) {
         const file = event.target.files[0];
-        if (!file) return;
+        if (!file) {
+            alert('Please select a valid OSM file.');
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = function (e) {
             const osmData = e.target.result;
             try {
-                // Convert OSM XML to GeoJSON
                 const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+                if (!geoJsonData || !geoJsonData.features) {
+                    throw new Error('Invalid GeoJSON data.');
+                }
 
-                // Filter areas only and apply styles
-                const geoJsonLayer = L.geoJSON(geoJsonData.features.filter(feature => 
+                const geoJsonLayer = L.geoJSON(geoJsonData.features.filter(feature =>
                     ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
-                ));
+                ), { style: { color: '#0078FF', weight: 2 } });
 
                 geoJsonLayer.addTo(map);
                 map.fitBounds(geoJsonLayer.getBounds());
             } catch (error) {
+                console.error('Error processing OSM file:', error);
                 alert('Invalid OSM file format.');
             }
         };
         reader.readAsText(file);
     });
 
-    // Handle saving the map data
+    // Save GeoJSON map data
     document.getElementById('saveMapButton').addEventListener('click', function () {
         map.eachLayer(function (layer) {
             if (layer instanceof L.GeoJSON) {
                 const geoJsonData = layer.toGeoJSON();
-                fetch('/MapViewer?handler=SaveGeoJson', {
+                fetch('/AddObject?handler=SaveGeoJson', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(geoJsonData),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(geoJsonData)
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById('successMessage').style.display = 'block';
+                        alert('Map saved successfully!');
                     } else {
                         alert('Failed to save map.');
                     }
@@ -145,3 +134,4 @@ else
         });
     });
 </script>
+
