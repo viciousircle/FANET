@@ -1,14 +1,29 @@
-﻿@page
+﻿
+
+@page
 @model WebApplication2.Pages.AddObjectModel
 @{
     ViewData["Title"] = "UAV";
 }
+<head>
+    @* <title>OSM Map Viewer</title> *@
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
 
-<h2>Step 1: UAVs data & Add Map</h2>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<h2>Step 1: UAV Data & Add Map</h2>
 
-
-<h2>UAV data </h2>
-<!-- Form tải lên file JSON -->
+<!-- Form for uploading JSON file -->
+<h2>Upload UAV Data</h2>
 <form enctype="multipart/form-data" method="post">
     <input type="file" name="JsonFile" accept=".json" />
     <button type="submit">Upload</button>
@@ -48,17 +63,85 @@
 }
 else
 {
-    <p>Vui lòng tải lên tệp JSON chứa thông tin UAVs.</p>
-    @* <p>Số UAV hiện tại: @Model.UAVs?.Count()</p> <!-- Hiển thị số UAVs --> *@
+    <p>Please upload a JSON file containing UAV data.</p>
 }
 
-<h2>Add Map .OSM</h2>
+<h2>Upload and View Map (.OSM)</h2>
+<form enctype="multipart/form-data" id="osmUploadForm">
+    <input type="file" id="osmFileInput" accept=".osm" />
+</form>
 
-<p>Page Map sẽ được chuyển vào đây </p>
+<div id="map" style="height: 500px; margin-top: 20px;"></div>
+<button id="saveMapButton">Save Map</button>
 
-<a asp-area="" asp-page="/MapViewer">Add map</a>
-<h2> </h2>
-<a asp-area="" asp-page="/ChooseStrategies">Next step</a>
+@if (!string.IsNullOrEmpty(Model.GeoJsonData))
+{
+    <div id="successMessage" style="color: green; font-weight: bold;">
+        Map saved successfully!
+    </div>
+}
 
+<a asp-page="/ChooseStrategies">Next Step</a>
 
+<script src="https://cdn.jsdelivr.net/npm/leaflet"></script>
+<script src="https://unpkg.com/osmtogeojson"></script>
+<script>
+    // Initialize the map
+    const map = L.map('map').setView([0, 0], 2);
 
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    // Handle OSM file upload
+    document.getElementById('osmFileInput').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const osmData = e.target.result;
+            try {
+                // Convert OSM XML to GeoJSON
+                const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+
+                // Filter areas only and apply styles
+                const geoJsonLayer = L.geoJSON(geoJsonData.features.filter(feature => 
+                    ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
+                ));
+
+                geoJsonLayer.addTo(map);
+                map.fitBounds(geoJsonLayer.getBounds());
+            } catch (error) {
+                alert('Invalid OSM file format.');
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    // Handle saving the map data
+    document.getElementById('saveMapButton').addEventListener('click', function () {
+        map.eachLayer(function (layer) {
+            if (layer instanceof L.GeoJSON) {
+                const geoJsonData = layer.toGeoJSON();
+                fetch('/MapViewer?handler=SaveGeoJson', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(geoJsonData),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('successMessage').style.display = 'block';
+                    } else {
+                        alert('Failed to save map.');
+                    }
+                })
+                .catch(error => console.error('Error saving map:', error));
+            }
+        });
+    });
+</script>
