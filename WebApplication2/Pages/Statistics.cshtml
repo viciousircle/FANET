@@ -1,6 +1,60 @@
 ﻿@page
 @model WebApplication2.Pages.StatisticsModel
 @{
+    ViewData["Title"] = "Statistics";
 }
 
-<p>hello</p>
+<h1>Statistics</h1>
+
+<div>
+    <h3>Bảng thống kê</h3>
+
+    <h4>Thông tin chiến lược đã chọn:</h4>
+    <p><strong>Chiến lược đã chọn:</strong> @Model.SelectedStrategyName</p>
+    <p><strong>Mô tả chiến lược:</strong> @Model.StrategyDescription</p>
+
+    <h4>Thông tin về phạm vi bao phủ:</h4>
+    <p><strong>Phần trăm bao phủ: </strong> @Model.CoveragePercentage %</p>
+
+    <h4>Thông tin về mạng và UAVs:</h4>
+    <p><strong>Số UAVs trong mạng: </strong> @Model.UAVCount</p>
+    <p><strong>Tốc độ truyền tải dữ liệu: </strong> @Model.TransmissionSpeed</p>
+
+    <h4>Kết luận:</h4>
+    <p>So sánh giữa tình trạng trước và sau khi áp dụng thuật toán:</p>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Tiêu chí</th>
+                <th>Trước khi sử dụng thuật toán</th>
+                <th>Sau khi sử dụng thuật toán</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Phạm vi bao phủ</td>
+                <td>@Model.BeforeCoverage</td>
+                <td>@Model.AfterCoverage</td>
+            </tr>
+            <tr>
+                <td>Tốc độ truyền</td>
+                <td>@Model.BeforeTransmissionSpeed</td>
+                <td>@Model.AfterTransmissionSpeed</td>
+            </tr>
+            <tr>
+                <td>Số UAVs</td>
+                <td>@Model.BeforeUAVCount</td>
+                <td>@Model.AfterUAVCount</td>
+            </tr>
+            <tr>
+                <td>Thời gian duy trì</td>
+                <td>@Model.BeforeMaxDuration</td>
+                <td>@Model.AfterMaxDuration</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Kết luận:</h4>
+    <p>@Model.Conclusion</p>
+</div>

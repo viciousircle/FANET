@@ -1,5 +1,4 @@
 ﻿@page "{strategyId:int}"
-@* @page *@
 @model WebApplication2.Pages.StrategyDetailsModel
 @{
     ViewData["Title"] = "Chi tiết chiến lược";
@@ -7,23 +6,32 @@
 
 <h1>Chi tiết chiến lược</h1>
 
-<p>Thông tin chi tiết về chiến lược bạn đã chọn:</p>
+@if (Model.SelectedStrategy == null)
+{
+    <p>Chiến lược không hợp lệ. Vui lòng quay lại trang trước.</p>
+    <a href="/ChooseStrategies" class="btn btn-primary">Quay lại</a>
+}
+else
+{
+    <p>Thông tin chi tiết về chiến lược bạn đã chọn:</p>
 
-<p><strong>Chiến lược: </strong>@Model.SelectedStrategy</p>
-<p><strong>Mô tả:</strong> @Model.StrategyDescription</p>
+    <h3>@Model.SelectedStrategy.Name</h3>
+    <p><strong>Mô tả:</strong> @Model.SelectedStrategy.Description</p>
+    <div>
+        <div><strong>UAVs:</strong> @Model.SelectedStrategy.UAVCount</div>
+        <div><strong>Thời gian duy trì tối đa:</strong> @Model.SelectedStrategy.MaxDuration</div>
+        <div><strong>Phạm vi tối đa:</strong> @Model.SelectedStrategy.MaxRange</div>
+        <div><strong>Tốc độ truyền:</strong> @Model.SelectedStrategy.TransmissionSpeed</div>
+    </div>
 
-@* <h3>Option @(strategy.Id): @(strategy.Name)</h3>
-        <p><strong>Công nghệ:</strong> @(strategy.Description)</p>
-        <div>
-            <div>UAVs: @(strategy.UAVCount)</div>
-            <div>Thời gian duy trì tối đa: @(strategy.MaxDuration)</div>
-            <div>Phạm vi tối đa: @(strategy.MaxRange)</div>
-            <div>Tốc độ truyền: @(strategy.TransmissionSpeed)</div>
-        </div> *@
+    <div>
+        Phần này trình bày bản đồ chiến lược
 
-<a href="/ChooseStrategies" class="btn btn-primary">Quay lại trang chọn chiến lược</a>
+        <p>Bản đồ đã bao phủ</p>
 
-<p></p>
+        <p> % bao phủ: 99%</p>
+    </div>
 
-<a href="/Statistics" class="btn btn-primary">Next step</a>
-
+    <a href="/ChooseStrategies" class="btn btn-primary">Chọn chiến lược khác</a>
+    <a href="/Statistics" class="btn btn-primary">Statistics</a>
+}

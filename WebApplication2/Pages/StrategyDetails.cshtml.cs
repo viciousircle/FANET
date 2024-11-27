@@ -1,42 +1,57 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Collections.Generic;
 
 namespace WebApplication2.Pages
 {
     public class StrategyDetailsModel : PageModel
     {
-        public string SelectedStrategy { get; set; }
-        public string StrategyDescription { get; set; }
+        public Strategy SelectedStrategy { get; set; }
 
-        public void OnGet(int? strategyId)
+        private readonly List<Strategy> Strategies = new List<Strategy>
         {
-            if (!strategyId.HasValue)
+            new Strategy
             {
-                SelectedStrategy = "Chiến lược không hợp lệ.";
-                StrategyDescription = "Không có mô tả chiến lược nào được tìm thấy.";
-                return;
+                Id = 1,
+                Name = "Thuật toán 1",
+                Description = "Sử dụng UAV với thuật toán định tuyến tối ưu cho tình huống khẩn cấp...",
+                UAVCount = 13,
+                MaxDuration = "2 giờ",
+                MaxRange = "10km",
+                TransmissionSpeed = "50Mbps"
+            },
+            new Strategy
+            {
+                Id = 2,
+                Name = "Thuật toán 2",
+                Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
+                UAVCount = 10,
+                MaxDuration = "1.5 giờ",
+                MaxRange = "8km",
+                TransmissionSpeed = "40Mbps"
+            },
+            new Strategy
+            {
+                Id = 3,
+                Name = "Thuật toán 3",
+                Description = "Sử dụng mô hình học máy để tối ưu hóa chiến lược bao phủ...",
+                UAVCount = 15,
+                MaxDuration = "2.5 giờ",
+                MaxRange = "12km",
+                TransmissionSpeed = "60Mbps"
+            }
+        };
+
+        public IActionResult OnGet(int? strategyId)
+        {
+            if (!strategyId.HasValue || strategyId.Value < 1 || strategyId.Value > Strategies.Count)
+            {
+                return RedirectToPage("/Error"); // Redirect to an error page for invalid IDs
             }
 
-            // Retrieve strategy details
-            switch (strategyId.Value)
-            {
-                case 1:
-                    SelectedStrategy = "Option 1: Thuật toán 1";
-                    StrategyDescription = "Sử dụng UAV với thuật toán định tuyến tối ưu cho tình huống khẩn cấp...";
-                    break;
-                case 2:
-                    SelectedStrategy = "Option 2: Thuật toán 2";
-                    StrategyDescription = "Sử dụng mạng cảm biến để thu thập dữ liệu...";
-                    break;
-                case 3:
-                    SelectedStrategy = "Option 3: Thuật toán 3";
-                    StrategyDescription = "Sử dụng mô hình học máy để tối ưu hóa chiến lược bao phủ...";
-                    break;
-                default:
-                    SelectedStrategy = "Chiến lược không hợp lệ.";
-                    StrategyDescription = "Không có mô tả chiến lược nào được tìm thấy.";
-                    break;
-            }
+            SelectedStrategy = Strategies.Find(s => s.Id == strategyId.Value);
+
+            return Page();
         }
     }
 }
