@@ -40,38 +40,6 @@ namespace WebApplication2.Pages
             return Page();
         }
 
-        // public async Task<IActionResult> OnPostAsync()
-        // {
-        //     if (JsonFile == null || JsonFile.Length == 0)
-        //     {
-        //         ModelState.AddModelError("", "Please upload a valid JSON file.");
-        //         return Page();
-        //     }
-
-        //     using (var reader = new StreamReader(JsonFile.OpenReadStream()))
-        //     {
-        //         var json = await reader.ReadToEndAsync();
-        //         try
-        //         {
-        //             var uavsList = JsonConvert.DeserializeObject<UAVsList>(json);
-        //             if (uavsList?.UAVs == null || uavsList.UAVs.Count == 0)
-        //             {
-        //                 ModelState.AddModelError("", "The JSON file does not contain UAV data.");
-        //                 return Page();
-        //             }
-        //             UAVs = uavsList.UAVs;
-        //             HttpContext.Session.SetString("UAVData", JsonConvert.SerializeObject(UAVs));
-        //         }
-        //         catch (JsonException)
-        //         {
-        //             ModelState.AddModelError("", "Invalid JSON format.");
-        //         }
-        //     }
-
-        //     return Page();
-        // }
-
-
         public async Task<IActionResult> OnPostAsync()
         {
             if (JsonFile == null || JsonFile.Length == 0)
@@ -110,11 +78,27 @@ namespace WebApplication2.Pages
 
         public async Task<IActionResult> OnPostSaveGeoJsonAsync()
         {
-            var geoJsonData = await new StreamReader(Request.Body).ReadToEndAsync();
-            HttpContext.Session.SetString("GeoJsonData", geoJsonData); // Save the GeoJSON data
-            return new JsonResult(new { success = true });
-        }
+            var geoJsonFilePath = Path.Combine(Directory.GetCurrentDirectory(), "SavedFiles", "map.geojson");
 
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(geoJsonFilePath));
+
+                using (var reader = new StreamReader(Request.Body))
+                {
+                    var geoJsonData = await reader.ReadToEndAsync();
+                    await System.IO.File.WriteAllTextAsync(geoJsonFilePath, geoJsonData);
+                    HttpContext.Session.SetString("GeoJsonData", geoJsonData);
+                }
+
+                return new JsonResult(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error saving GeoJSON file: {ex.Message}");
+                return new JsonResult(new { success = false });
+            }
+        }
 
         public IActionResult OnGet()
         {
