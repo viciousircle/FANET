@@ -1,61 +1,69 @@
 ﻿@page
 @model WebApplication2.Pages.ChooseStrategiesModel
 @{
-    ViewData["Title"] = "Step 2";
+    ViewData["Title"] = "Step 2: Choose Strategies";
 }
 
 <head>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="~/css/choose-strategies.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
     <style>
         #map {
-            height: 300px;
-            width: 30%;
+            height: 350px;
+            width: 60%;
         }
     </style>
 </head>
 
-<h1>Step 2: Choose Strategies</h1>
+<h1>@ViewData["Title"]</h1>
 
-<!-- File Upload Form -->
-<form enctype="multipart/form-data" id="osmUploadForm">
-    <input type="file" id="osmFileInput" accept=".osm" />
-</form>
+<div class="box-map">
+    <div>
+        <form enctype="multipart/form-data" id="osmUploadForm">
+            <label for="osmFileInput">Upload OSM File:</label>
+            <input type="file" id="osmFileInput" accept=".osm" />
+        </form>
 
-<div>
-    <div>UAV data: @Model.UAVs.Count</div>
-    <div>Area: @Model.GeoJsonData.Length km²</div>
+        <div>
+            <div>UAV data: @Model.UAVs.Count</div>
+            <div>Area: @Model.GeoJsonData.Length km²</div>
+        </div>
+
+        <div>
+            <label for="radiusInput">Radius:</label>
+            <input type="number" id="radiusInput" value="100" min="0" step="10" />
+            <button id="updateRadiusButton">Update Radius</button>
+        </div>
+    </div>
+
+
+
+    <div id="map"></div>
 </div>
 
-<label for="radiusInput">Radius:</label>
-<input type="number" id="radiusInput" value="100" min="0" step="10" />
-<button id="updateRadiusButton">Update Radius</button>
-
-<div id="map"></div>
-
-<p>Here are some suggested strategies:</p>
-
+<h2>Suggested Strategies</h2>
 @foreach (var strategy in Model.Strategies)
 {
+    <div class="strategy-option">
+    <h3>Option @(strategy.Id): @(strategy.Name)</h3>
+    <p><strong>Technology:</strong> @(strategy.Description)</p>
     <div>
-        <h3>Option @(strategy.Id): @(strategy.Name)</h3>
-        <p><strong>Technology:</strong> @(strategy.Description)</p>
-        <div>
-            <div>UAVs: @(strategy.UAVCount)</div>
-            <div>Max Duration: @(strategy.MaxDuration)</div>
-            <div>Max Range: @(strategy.MaxRange)</div>
-            <div>Transmission Speed: @(strategy.TransmissionSpeed)</div>
-        </div>
-        <button onclick="chooseOption(@(strategy.Id))" class="btn btn-primary">Choose</button>
+        <div>UAVs: @(strategy.UAVCount)</div>
+        <div>Max Duration: @(strategy.MaxDuration) hours</div>
+        <div>Max Range: @(strategy.MaxRange) km</div>
+        <div>Transmission Speed: @(strategy.TransmissionSpeed) Mbps</div>
     </div>
+    <button onclick="chooseStrategy(@(strategy.Id))" class="btn btn-primary">Choose</button>
+</div>
 }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <script>
-    // Map Initialization
+    // Initialize map
     const map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
@@ -63,7 +71,7 @@
     let buildingFeatures = [];
     let centerCoordinates = [];
 
-    // Clear the Map Layer
+    // Clear all layers
     function clearMap() {
         if (buildingLayer) map.removeLayer(buildingLayer);
         if (centerMarker) map.removeLayer(centerMarker);
@@ -86,20 +94,20 @@
 
                 clearMap();
 
-                // Filter Buildings from GeoJSON
+                // Filter buildings
                 buildingFeatures = geoJsonData.features.filter(feature =>
                     feature.properties?.building &&
                     ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
                 );
 
-                // Add Buildings Layer
+                // Add buildings layer
                 buildingLayer = L.geoJSON(buildingFeatures, {
                     style: { color: 'gray', weight: 2 }
                 }).addTo(map);
 
                 map.fitBounds(buildingLayer.getBounds());
 
-                // Add Centroid Marker
+                // Add centroid marker
                 const centroid = turf.centroid(geoJsonData);
                 centerCoordinates = centroid.geometry.coordinates;
                 centerMarker = L.circleMarker([centerCoordinates[1], centerCoordinates[0]], {
@@ -107,6 +115,7 @@
                     radius: 5
                 }).addTo(map);
 
+                // Update radius circle
                 updateRadiusCircle(parseFloat(document.getElementById('radiusInput').value));
             } catch (error) {
                 alert('Invalid OSM file format or no buildings found.');
@@ -116,7 +125,7 @@
         reader.readAsText(file);
     }
 
-    // Update Radius Circle
+    // Update radius circle on the map
     function updateRadiusCircle(radiusInMeters) {
         if (isNaN(radiusInMeters) || radiusInMeters <= 0) return alert('Please enter a valid radius value.');
 
@@ -129,7 +138,7 @@
             radius: radiusInMeters
         }).addTo(map);
 
-        // Crop Buildings within the Radius
+        // Crop buildings within the radius
         croppedBuildings = buildingFeatures
             .map(feature => turf.intersect(feature, turf.circle(centerCoordinates, radiusInMeters / 1000, { units: 'kilometers' })))
             .filter(croppedFeature => croppedFeature !== null);
@@ -141,13 +150,13 @@
         }).addTo(map);
     }
 
-    // Update Radius on Button Click
+    // Event listener to update radius circle
     document.getElementById('updateRadiusButton').addEventListener('click', function () {
         const newRadius = parseFloat(document.getElementById('radiusInput').value);
         updateRadiusCircle(newRadius);
     });
 
-    // Update Radius on Enter Key
+    // Event listener to update radius on Enter key press
     document.getElementById('radiusInput').addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
             const newRadius = parseFloat(document.getElementById('radiusInput').value);
@@ -155,8 +164,8 @@
         }
     });
 
-    // Navigate to Strategy Details
-    function chooseOption(option) {
-        window.location.href = '/StrategyDetails/' + option;
+    // Navigate to strategy details page
+    function chooseStrategy(optionId) {
+        window.location.href = '/StrategyDetails/' + optionId;
     }
 </script>

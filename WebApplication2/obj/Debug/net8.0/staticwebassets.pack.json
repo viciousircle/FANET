@@ -5,6 +5,14 @@
       "PackagePath": "staticwebassets/WebApplication2.bundle.scp.css"
     },
     {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/css/add-object.css",
+      "PackagePath": "staticwebassets/css/add-object.css"
+    },
+    {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/css/choose-strategies.css",
+      "PackagePath": "staticwebassets/css/choose-strategies.css"
+    },
+    {
       "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/css/site.css",
       "PackagePath": "staticwebassets/css/site.css"
     },
