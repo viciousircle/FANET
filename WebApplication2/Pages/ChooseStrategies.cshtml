@@ -12,8 +12,8 @@
     <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
     <style>
         #map {
-            height: 500px;
-            width: 100%;
+            height: 300px;
+            width: 30%;
         }
     </style>
 </head>
@@ -21,10 +21,8 @@
 <h1>Step 2: Choose Strategies</h1>
 
 <!-- File Upload Form -->
-<form method="post" enctype="multipart/form-data">
-    <label for="osmFile">Upload OSM File:</label>
-    <input type="file" id="osmFile" name="osmFile" accept=".osm" />
-    <button type="submit">Upload</button>
+<form enctype="multipart/form-data" id="osmUploadForm">
+    <input type="file" id="osmFileInput" accept=".osm" />
 </form>
 
 <div>
@@ -32,11 +30,32 @@
     <div>Area: @Model.GeoJsonData.Length km²</div>
 </div>
 
+<label for="radiusInput">Radius:</label>
+<input type="number" id="radiusInput" value="100" min="0" step="10" />
+<button id="updateRadiusButton">Update Radius</button>
+
 <div id="map"></div>
+
+<p>Here are some suggested strategies:</p>
+
+@foreach (var strategy in Model.Strategies)
+{
+    <div>
+        <h3>Option @(strategy.Id): @(strategy.Name)</h3>
+        <p><strong>Technology:</strong> @(strategy.Description)</p>
+        <div>
+            <div>UAVs: @(strategy.UAVCount)</div>
+            <div>Max Duration: @(strategy.MaxDuration)</div>
+            <div>Max Range: @(strategy.MaxRange)</div>
+            <div>Transmission Speed: @(strategy.TransmissionSpeed)</div>
+        </div>
+        <button onclick="chooseOption(@(strategy.Id))" class="btn btn-primary">Choose</button>
+    </div>
+}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <script>
-    // Map and Layer Initialization
+    // Map Initialization
     const map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
@@ -44,14 +63,17 @@
     let buildingFeatures = [];
     let centerCoordinates = [];
 
+    // Clear the Map Layer
     function clearMap() {
         if (buildingLayer) map.removeLayer(buildingLayer);
         if (centerMarker) map.removeLayer(centerMarker);
         if (radiusCircle) map.removeLayer(radiusCircle);
     }
 
-    // OSM File Upload and Map Rendering
-    document.getElementById('osmFileInput').addEventListener('change', function (event) {
+    // Handle OSM File Upload
+    document.getElementById('osmFileInput').addEventListener('change', handleOSMFileUpload);
+
+    function handleOSMFileUpload(event) {
         const file = event.target.files[0];
         if (!file) return alert('Please select a valid OSM file.');
 
@@ -64,20 +86,22 @@
 
                 clearMap();
 
+                // Filter Buildings from GeoJSON
                 buildingFeatures = geoJsonData.features.filter(feature =>
                     feature.properties?.building &&
                     ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
                 );
 
+                // Add Buildings Layer
                 buildingLayer = L.geoJSON(buildingFeatures, {
                     style: { color: 'gray', weight: 2 }
                 }).addTo(map);
 
                 map.fitBounds(buildingLayer.getBounds());
 
+                // Add Centroid Marker
                 const centroid = turf.centroid(geoJsonData);
                 centerCoordinates = centroid.geometry.coordinates;
-
                 centerMarker = L.circleMarker([centerCoordinates[1], centerCoordinates[0]], {
                     color: 'red',
                     radius: 5
@@ -90,9 +114,9 @@
         };
 
         reader.readAsText(file);
-    });
+    }
 
-    // Radius Circle Update
+    // Update Radius Circle
     function updateRadiusCircle(radiusInMeters) {
         if (isNaN(radiusInMeters) || radiusInMeters <= 0) return alert('Please enter a valid radius value.');
 
@@ -105,6 +129,7 @@
             radius: radiusInMeters
         }).addTo(map);
 
+        // Crop Buildings within the Radius
         croppedBuildings = buildingFeatures
             .map(feature => turf.intersect(feature, turf.circle(centerCoordinates, radiusInMeters / 1000, { units: 'kilometers' })))
             .filter(croppedFeature => croppedFeature !== null);
@@ -122,7 +147,7 @@
         updateRadiusCircle(newRadius);
     });
 
-    // Add an event listener for the 'Enter' key in the radius input field
+    // Update Radius on Enter Key
     document.getElementById('radiusInput').addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
             const newRadius = parseFloat(document.getElementById('radiusInput').value);
@@ -130,18 +155,8 @@
         }
     });
 
-    // Save GeoJSON Data
-    document.getElementById('saveMapButton').addEventListener('click', function () {
-        if (!buildingLayer) return alert('No map data to save.');
-
-        const geoJsonData = buildingLayer.toGeoJSON();
-        fetch('/AddObject?handler=SaveGeoJson', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geoJsonData)
-        })
-            .then(response => response.json())
-            .then(data => alert(data.success ? 'Map saved successfully!' : 'Failed to save map.'))
-            .catch(error => console.error('Error saving map:', error));
-    });
+    // Navigate to Strategy Details
+    function chooseOption(option) {
+        window.location.href = '/StrategyDetails/' + option;
+    }
 </script>
