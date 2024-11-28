@@ -50,7 +50,7 @@ namespace WebApplication2.Pages
                 new Strategy
                 {
                     Id = 1,
-                    Name = "Thuật toán 1",
+                    Name = "Centralized + AODV + Geographical + Handover",
                     Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
                     UAVCount = UAVs.Count,
                     MaxDuration = "5 giờ",
