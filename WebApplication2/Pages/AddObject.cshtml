@@ -79,12 +79,6 @@
 
 <!-- Map and Save Button -->
 <div id="map"></div>
-<button id="saveMapButton">Save Map</button>
-
-@if (!string.IsNullOrEmpty(Model.GeoJsonData))
-{
-    <div style="color:green; font-weight: bold;">Map saved successfully!</div>
-}
 
 <a asp-page="/ChooseStrategies">Next Step</a>
 
@@ -186,18 +180,5 @@ document.getElementById('radiusInput').addEventListener('keydown', function (eve
 });
 
 
-    // Save GeoJSON Data
-    document.getElementById('saveMapButton').addEventListener('click', function () {
-        if (!buildingLayer) return alert('No map data to save.');
-
-        const geoJsonData = buildingLayer.toGeoJSON();
-        fetch('/AddObject?handler=SaveGeoJson', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geoJsonData)
-        })
-            .then(response => response.json())
-            .then(data => alert(data.success ? 'Map saved successfully!' : 'Failed to save map.'))
-            .catch(error => console.error('Error saving map:', error));
-    });
+   
 </script>
