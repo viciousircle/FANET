@@ -253,6 +253,22 @@
       "PackagePath": "staticwebassets/uploads/map (5).osm"
     },
     {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/uploads/map (6).osm",
+      "PackagePath": "staticwebassets/uploads/map (6).osm"
+    },
+    {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/uploads/map (7).osm",
+      "PackagePath": "staticwebassets/uploads/map (7).osm"
+    },
+    {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/uploads/map 4.osm",
+      "PackagePath": "staticwebassets/uploads/map 4.osm"
+    },
+    {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/uploads/map tohuu.osm",
+      "PackagePath": "staticwebassets/uploads/map tohuu.osm"
+    },
+    {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.WebApplication2.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

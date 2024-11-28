@@ -9,6 +9,18 @@ namespace WebApplication2.Pages
 {
     public class ChooseStrategiesModel : PageModel
     {
+        public class UAV
+        {
+            public int Id { get; set; }
+            public float X { get; set; }
+            public float Y { get; set; }
+            public float Z { get; set; }
+        }
+
+        public class UAVsList
+        {
+            public List<UAV> UAVs { get; set; }
+        }
         private readonly IWebHostEnvironment _env;
 
         public ChooseStrategiesModel(IWebHostEnvironment env)
@@ -27,7 +39,6 @@ namespace WebApplication2.Pages
         {
             if (osmFile != null && osmFile.Length > 0)
             {
-                // Path to save the uploaded file
                 var filePath = Path.Combine(_env.WebRootPath, "uploads", osmFile.FileName);
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
@@ -36,118 +47,93 @@ namespace WebApplication2.Pages
                     osmFile.CopyTo(stream);
                 }
 
-                // Save the OSM file path and read the content
                 OSMFilePath = filePath;
                 OsmData = System.IO.File.ReadAllText(filePath);
             }
 
-            // Reload UAVs and GeoJSON data
             UAVs = JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData") ?? "[]");
             GeoJsonData = HttpContext.Session.GetString("GeoJsonData") ?? string.Empty;
 
-            // Define strategies dynamically
             Strategies = new List<Strategy>
+        {
+            new Strategy
             {
-                new Strategy
-                {
-                    Id = 1,
-                    Name = "Thuật toán 1",
-                    Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "5 giờ",
-                    MaxRange = "10km",
-                    TransmissionSpeed = "50Mbps"
-                },
-                new Strategy
-                {
-                    Id = 2,
-                    Name = "Thuật toán 2",
-                    Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "1.5 giờ",
-                    MaxRange = "8km",
-                    TransmissionSpeed = "40Mbps"
-                },
-                new Strategy
-                {
-                    Id = 3,
-                    Name = "Thuật toán 3",
-                    Description = "Sử dụng mô hình học máy để tối ưu hóa...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "2.5 giờ",
-                    MaxRange = "12km",
-                    TransmissionSpeed = "60Mbps"
-                }
-            };
+                Id = 1,
+                Name = "Thuật toán 1",
+                Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
+                UAVCount = UAVs.Count,
+                MaxDuration = "5 giờ",
+                MaxRange = "10km",
+                TransmissionSpeed = "50Mbps"
+            },
+            new Strategy
+            {
+                Id = 2,
+                Name = "Thuật toán 2",
+                Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
+                UAVCount = UAVs.Count,
+                MaxDuration = "1.5 giờ",
+                MaxRange = "8km",
+                TransmissionSpeed = "40Mbps"
+            },
+            new Strategy
+            {
+                Id = 3,
+                Name = "Thuật toán 3",
+                Description = "Sử dụng mô hình học máy để tối ưu hóa...",
+                UAVCount = UAVs.Count,
+                MaxDuration = "2.5 giờ",
+                MaxRange = "12km",
+                TransmissionSpeed = "60Mbps"
+            }
+        };
         }
 
-        // Load data when the page is accessed (GET)
         public void OnGet()
         {
-            // Retrieve UAV data and GeoJSON data from session
             UAVs = JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData") ?? "[]");
             GeoJsonData = HttpContext.Session.GetString("GeoJsonData") ?? string.Empty;
 
-            // Handle previously uploaded OSM data
             if (string.IsNullOrEmpty(OSMFilePath))
             {
                 OSMFilePath = "No file found.";
                 OsmData = string.Empty;
             }
 
-            // Define strategies (if not already done by POST)
             Strategies = new List<Strategy>
+        {
+            new Strategy
             {
-                new Strategy
-                {
-                    Id = 1,
-                    Name = "Thuật toán 1",
-                    Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "5 giờ",
-                    MaxRange = "10km",
-                    TransmissionSpeed = "50Mbps"
-                },
-                new Strategy
-                {
-                    Id = 2,
-                    Name = "Thuật toán 2",
-                    Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "1.5 giờ",
-                    MaxRange = "8km",
-                    TransmissionSpeed = "40Mbps"
-                },
-                new Strategy
-                {
-                    Id = 3,
-                    Name = "Thuật toán 3",
-                    Description = "Sử dụng mô hình học máy để tối ưu hóa...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "2.5 giờ",
-                    MaxRange = "12km",
-                    TransmissionSpeed = "60Mbps"
-                }
-            };
-        }
-
-        public class UAV
-        {
-            public int Id { get; set; }
-            public float X { get; set; }
-            public float Y { get; set; }
-            public float Z { get; set; }
-        }
-
-        public class Strategy
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public int UAVCount { get; set; }
-            public string MaxDuration { get; set; }
-            public string MaxRange { get; set; }
-            public string TransmissionSpeed { get; set; }
+                Id = 1,
+                Name = "Thuật toán 1",
+                Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
+                UAVCount = UAVs.Count,
+                MaxDuration = "5 giờ",
+                MaxRange = "10km",
+                TransmissionSpeed = "50Mbps"
+            },
+            new Strategy
+            {
+                Id = 2,
+                Name = "Thuật toán 2",
+                Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
+                UAVCount = UAVs.Count,
+                MaxDuration = "1.5 giờ",
+                MaxRange = "8km",
+                TransmissionSpeed = "40Mbps"
+            },
+            new Strategy
+            {
+                Id = 3,
+                Name = "Thuật toán 3",
+                Description = "Sử dụng mô hình học máy để tối ưu hóa...",
+                UAVCount = UAVs.Count,
+                MaxDuration = "2.5 giờ",
+                MaxRange = "12km",
+                TransmissionSpeed = "60Mbps"
+            }
+        };
         }
     }
+
 }
