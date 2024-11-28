@@ -21,6 +21,16 @@ namespace WebApplication2.Pages
         public string BeforeMaxDuration { get; set; }
         public string AfterMaxDuration { get; set; }
 
+        // QoS metrics before and after values
+        public string BeforeLatency { get; set; }
+        public string AfterLatency { get; set; }
+        public string BeforeBandwidth { get; set; }
+        public string AfterBandwidth { get; set; }
+        public string BeforePacketLoss { get; set; }
+        public string AfterPacketLoss { get; set; }
+        public string BeforeThroughput { get; set; }
+        public string AfterThroughput { get; set; }
+
         // Simulating the retrieval of data
         public void OnGet()
         {
@@ -41,6 +51,16 @@ namespace WebApplication2.Pages
             AfterUAVCount = "13 UAVs";
             BeforeMaxDuration = "1 giờ";
             AfterMaxDuration = "2 giờ";
+
+            // Simulate QoS metrics before and after algorithm
+            BeforeLatency = "200 ms"; // Example latency before algorithm
+            AfterLatency = "120 ms"; // Example latency after algorithm
+            BeforeBandwidth = "30 Mbps"; // Example bandwidth before algorithm
+            AfterBandwidth = "50 Mbps"; // Example bandwidth after algorithm
+            BeforePacketLoss = "5%"; // Example packet loss before algorithm
+            AfterPacketLoss = "1%"; // Example packet loss after algorithm
+            BeforeThroughput = "15 Mbps"; // Example throughput before algorithm
+            AfterThroughput = "35 Mbps"; // Example throughput after algorithm
         }
     }
 }

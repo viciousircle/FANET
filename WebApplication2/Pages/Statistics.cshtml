@@ -55,6 +55,41 @@
         </tbody>
     </table>
 
+    <!-- QoS Table -->
+    <h4>Chỉ số QoS (Quality of Service):</h4>
+    <p>So sánh các chỉ số QoS trước và sau khi áp dụng thuật toán:</p>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Tiêu chí</th>
+                <th>Trước khi sử dụng thuật toán</th>
+                <th>Sau khi sử dụng thuật toán</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Độ trễ (Latency)</td>
+                <td>@Model.BeforeLatency ms</td>
+                <td>@Model.AfterLatency ms</td>
+            </tr>
+            <tr>
+                <td>Băng thông (Bandwidth)</td>
+                <td>@Model.BeforeBandwidth Mbps</td>
+                <td>@Model.AfterBandwidth Mbps</td>
+            </tr>
+            <tr>
+                <td>Tỷ lệ mất gói (Packet Loss)</td>
+                <td>@Model.BeforePacketLoss %</td>
+                <td>@Model.AfterPacketLoss %</td>
+            </tr>
+            <tr>
+                <td>Tốc độ chuyển tiếp (Throughput)</td>
+                <td>@Model.BeforeThroughput Mbps</td>
+                <td>@Model.AfterThroughput Mbps</td>
+            </tr>
+        </tbody>
+    </table>
+
     <h4>Kết luận:</h4>
     <p>@Model.Conclusion</p>
 </div>
