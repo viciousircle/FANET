@@ -48,6 +48,35 @@
 
 <h2>Suggested Strategies</h2>
 <div class="suggested-section">
+    <div class="filter-section">
+        <div>
+            <label for="networkType">Network Type:</label>
+            <select id="networkType">
+                <option value="decentralized">Decentralized Network</option>
+                <option value="centralized">Centralized Network</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="routingType">Routing Type:</label>
+            <select id="routingType">
+                <option value="aodv">AODV</option>
+                <option value="geographic">Geographic</option>
+                <option value="clusterhead">Clusterhead</option>
+                <option value="energy">Energy</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="handoverType">Handover:</label>
+            <select id="handoverType">
+                <option value="handover1">Handover 1</option>
+                <option value="handover2">Handover 2</option>
+            </select>
+        </div>
+    </div>
+
+
     @foreach (var strategy in Model.Strategies)
     {
         <div class="strategy-option">
