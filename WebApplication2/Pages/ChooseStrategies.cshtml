@@ -30,8 +30,9 @@
 
         <div>
             <div>UAV data: @Model.UAVs.Count</div>
-            <div>Area: @Model.GeoJsonData.Length km²</div>
+            <div id="areaOutput">Area: 0 m^2</div>
         </div>
+
 
         <div>
             <label for="radiusInput">Radius:</label>
@@ -46,22 +47,26 @@
 </div>
 
 <h2>Suggested Strategies</h2>
-@foreach (var strategy in Model.Strategies)
-{
-    <div class="strategy-option">
-    <h3>Option @(strategy.Id): @(strategy.Name)</h3>
-    <p><strong>Technology:</strong> @(strategy.Description)</p>
-    <div>
-        <div>UAVs: @(strategy.UAVCount)</div>
-        <div>Max Duration: @(strategy.MaxDuration) hours</div>
-        <div>Max Range: @(strategy.MaxRange) km</div>
-        <div>Transmission Speed: @(strategy.TransmissionSpeed) Mbps</div>
-    </div>
-    <button onclick="chooseStrategy(@(strategy.Id))" class="btn btn-primary">Choose</button>
+<div class="suggested-section">
+    @foreach (var strategy in Model.Strategies)
+    {
+        <div class="strategy-option">
+            <h3>Option @(strategy.Id): @(strategy.Name)</h3>
+            <p><strong>Technology:</strong> @(strategy.Description)</p>
+            <div>
+                <div>UAVs: @(strategy.UAVCount)</div>
+                <div>Max Duration: @(strategy.MaxDuration) hours</div>
+                <div>Max Range: @(strategy.MaxRange) km</div>
+                <div>Transmission Speed: @(strategy.TransmissionSpeed) Mbps</div>
+            </div>
+            <button onclick="chooseStrategy(@(strategy.Id))" class="btn btn-primary">Choose</button>
+        </div>
+    }
 </div>
-}
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
 <script>
     // Initialize map
     const map = L.map('map').setView([0, 0], 2);
@@ -137,6 +142,13 @@
             fillOpacity: 0.3,
             radius: radiusInMeters
         }).addTo(map);
+
+        // Calculate the area of the circle (in square meters)
+        const areaInSqMeters = Math.PI * Math.pow(radiusInMeters, 2);
+        const areaInSqKm = areaInSqMeters / 1000000; // Convert to square kilometers
+
+        // Update the area on the page
+        document.getElementById('areaOutput').textContent = `Area: ${areaInSqKm.toFixed(2)} km²`;
 
         // Crop buildings within the radius
         croppedBuildings = buildingFeatures
