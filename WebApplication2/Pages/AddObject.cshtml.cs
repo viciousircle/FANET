@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +10,13 @@ namespace WebApplication2.Pages
 {
     public class AddObjectModel : PageModel
     {
+        private readonly IWebHostEnvironment _env;
+
+        public AddObjectModel(IWebHostEnvironment env)
+        {
+            _env = env;
+        }
+
         public class UAV
         {
             public int Id { get; set; }
@@ -17,16 +25,20 @@ namespace WebApplication2.Pages
             public float Z { get; set; }
         }
 
-        public class UAVsList
-        {
-            public List<UAV> UAVs { get; set; }
-        }
-
         [BindProperty]
         public IFormFile JsonFile { get; set; }
+
         public List<UAV> UAVs { get; set; }
-        [BindProperty]
-        public string GeoJsonData { get; set; }
+        public bool UploadSuccess { get; set; }
+
+        public IActionResult OnGet()
+        {
+            UAVs = HttpContext.Session.GetString("UAVData") != null
+                ? JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData"))
+                : new List<UAV>();
+
+            return Page();
+        }
 
         public async Task<IActionResult> OnPostAsync()
         {
@@ -38,48 +50,27 @@ namespace WebApplication2.Pages
 
             using (var reader = new StreamReader(JsonFile.OpenReadStream()))
             {
-                var json = await reader.ReadToEndAsync();
                 try
                 {
-                    var uavsList = JsonConvert.DeserializeObject<UAVsList>(json);
-                    if (uavsList?.UAVs == null || uavsList.UAVs.Count == 0)
+                    var json = await reader.ReadToEndAsync();
+                    UAVs = JsonConvert.DeserializeObject<List<UAV>>(json);
+
+                    if (UAVs == null || UAVs.Count == 0)
                     {
-                        ModelState.AddModelError("", "The JSON file does not contain UAV data.");
+                        ModelState.AddModelError("", "The JSON file does not contain valid UAV data.");
                         return Page();
                     }
-                    UAVs = uavsList.UAVs;
+
                     HttpContext.Session.SetString("UAVData", JsonConvert.SerializeObject(UAVs));
                 }
-                catch (JsonException)
+                catch
                 {
                     ModelState.AddModelError("", "Invalid JSON format.");
+                    return Page();
                 }
             }
 
-            return Page();
-        }
-
-        public async Task<IActionResult> OnPostSaveGeoJsonAsync()
-        {
-            var geoJsonData = await new StreamReader(Request.Body).ReadToEndAsync();
-            HttpContext.Session.SetString("GeoJsonData", geoJsonData); // Save the GeoJSON data
-            return new JsonResult(new { success = true });
-        }
-
-
-        public async Task<IActionResult> OnPostSaveOsmFileAsync()
-        {
-            var osmFileData = await new StreamReader(JsonFile.OpenReadStream()).ReadToEndAsync();
-            HttpContext.Session.SetString("OsmData", osmFileData); // Save the OSM file data
-            return new JsonResult(new { success = true });
-        }
-
-
-        public IActionResult OnGet()
-        {
-            GeoJsonData = HttpContext.Session.GetString("GeoJsonData");
-            UAVs = JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData") ?? "[]");
-            return Page();
+            return RedirectToPage();
         }
     }
 }

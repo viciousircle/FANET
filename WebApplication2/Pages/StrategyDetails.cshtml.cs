@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace WebApplication2.Pages
 {
     public class StrategyDetailsModel : PageModel
     {
-        public Strategy SelectedStrategy { get; set; }
+        public Strategy SelectedStrategy { get; private set; }
 
-        private readonly List<Strategy> Strategies = new List<Strategy>
+        private static readonly List<Strategy> Strategies = new List<Strategy>
         {
             new Strategy
             {
@@ -44,14 +45,34 @@ namespace WebApplication2.Pages
 
         public IActionResult OnGet(int? strategyId)
         {
+            // Validate the input parameter
             if (!strategyId.HasValue || strategyId.Value < 1 || strategyId.Value > Strategies.Count)
             {
-                return RedirectToPage("/Error"); // Redirect to an error page for invalid IDs
+                // Redirect to an error page or display a friendly message
+                return RedirectToPage("/Error");
             }
 
-            SelectedStrategy = Strategies.Find(s => s.Id == strategyId.Value);
+            // Find the strategy using LINQ for clarity
+            SelectedStrategy = Strategies.FirstOrDefault(s => s.Id == strategyId.Value);
+
+            // If somehow the strategy was not found, redirect to an error page
+            if (SelectedStrategy == null)
+            {
+                return RedirectToPage("/Error");
+            }
 
             return Page();
         }
+    }
+
+    public class Strategy
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int UAVCount { get; set; }
+        public string MaxDuration { get; set; }
+        public string MaxRange { get; set; }
+        public string TransmissionSpeed { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "6BPMo7lo+8T0HBWUFTR858SWuUyYrkJlbOiNmFP6C1I=",
+  "Hash": "uxtVlvIXI5/4l+V7pjnCmFvvuAzdoOK1FfyZPImbWI8=",
   "Source": "WebApplication2",
   "BasePath": "_content/WebApplication2",
   "Mode": "Default",
@@ -91,6 +91,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/favicon.ico"
+    },
+    {
+      "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/files/base.osm",
+      "SourceId": "WebApplication2",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/",
+      "BasePath": "_content/WebApplication2",
+      "RelativePath": "files/base.osm",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/files/base.osm"
     },
     {
       "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/js/site.js",

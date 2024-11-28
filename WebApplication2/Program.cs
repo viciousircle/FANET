@@ -3,11 +3,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-// Configure HTTPS redirection
-// builder.Services.AddHttpsRedirection(options =>
-// {
-//     options.HttpsPort = 7085; // Ensure this matches your development server port
-// });
 
 // Configure Session
 builder.Services.AddDistributedMemoryCache(); // Use in-memory cache for session

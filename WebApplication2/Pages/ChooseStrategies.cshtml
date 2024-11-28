@@ -4,62 +4,93 @@
     ViewData["Title"] = "Step 2";
 }
 
-<h1>Step 2</h1>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
 
-<p>Chọn chiến lược bao phủ phù hợp</p>
+<h1>Step 2: Choose Strategies</h1>
+
+<!-- File Upload Form -->
+<form method="post" enctype="multipart/form-data">
+    <label for="osmFile">Upload OSM File:</label>
+    <input type="file" id="osmFile" name="osmFile" accept=".osm" />
+    <button type="submit">Upload</button>
+</form>
 
 <div>
     <div>UAV data: @Model.UAVs.Count</div>
-    <div>Area: @Model.GeoJsonData.Length km²</div> <!-- Display length of GeoJSON for reference -->
+    <div>Area: @Model.GeoJsonData.Length km²</div>
 </div>
 
-<p>Sau đây là một vài gợi ý các kịch bản:</p>
-<p>Kịch bản cứu hộ: sử dụng Option 1</p>
+<div id="map"></div>
+
+<script>
+    // Initialize Map
+    const map = L.map('map').setView([0, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+    // OSM Data from the server (Raw XML)
+    var osmData = `@Model.OsmData`.trim();
+
+    if (osmData) {
+        try {
+            // Convert OSM data to GeoJSON
+            const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+
+            // Filter only buildings
+            const buildingFeatures = geoJsonData.features.filter(feature =>
+                feature.properties?.building &&
+                ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
+            );
+
+            // Add buildings to the map
+            const buildingLayer = L.geoJSON(buildingFeatures, {
+                style: { color: 'gray', weight: 2 }
+            }).addTo(map);
+
+            // Fit map bounds to building layer
+            map.fitBounds(buildingLayer.getBounds());
+        } catch (error) {
+            console.error("Error parsing OSM data:", error);
+            alert("Failed to load OSM data.");
+        }
+    } else {
+        console.warn("No OSM data available.");
+    }
+</script>
+
+@if (Model.OSMFilePath != "No file found.")
+{
+    <p>The uploaded OSM file is located at: @Model.OSMFilePath</p>
+}
+else
+{
+    <p>No OSM file has been uploaded yet.</p>
+}
+
+<p>Here are some suggested strategies:</p>
 
 @foreach (var strategy in Model.Strategies)
 {
     <div>
         <h3>Option @(strategy.Id): @(strategy.Name)</h3>
-        <p><strong>Công nghệ:</strong> @(strategy.Description)</p>
+        <p><strong>Technology:</strong> @(strategy.Description)</p>
         <div>
             <div>UAVs: @(strategy.UAVCount)</div>
-            <div>Thời gian duy trì tối đa: @(strategy.MaxDuration)</div>
-            <div>Phạm vi tối đa: @(strategy.MaxRange)</div>
-            <div>Tốc độ truyền: @(strategy.TransmissionSpeed)</div>
+            <div>Max Duration: @(strategy.MaxDuration)</div>
+            <div>Max Range: @(strategy.MaxRange)</div>
+            <div>Transmission Speed: @(strategy.TransmissionSpeed)</div>
         </div>
         <button onclick="chooseOption(@(strategy.Id))" class="btn btn-primary">Choose</button>
     </div>
 }
-
-<!-- Display the map -->
-<div id="map" style="height: 500px; width: 100%;"></div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://unpkg.com/osmtogeojson/osmtogeojson.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
-
-<script>
-    // Initialize the map
-    const map = L.map('map').setView([0, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-
-    // Load OSM data from session
-    var osmData = '@Model.OsmData';
-
-    if (osmData) {
-        const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
-
-        if (geoJsonData && geoJsonData.features) {
-            L.geoJSON(geoJsonData).addTo(map);
-            map.fitBounds(L.geoJSON(geoJsonData).getBounds());  // Adjust the map view to fit the OSM data
-        }
-    }
-
-    // Optional: Add any additional features such as markers, radius, etc.
-</script>
-
-<script>
-    function chooseOption(option) {
-        window.location.href = '/StrategyDetails/' + option;
-    }
-</script>

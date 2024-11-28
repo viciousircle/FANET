@@ -26,6 +26,7 @@
     <input type="file" name="JsonFile" accept=".json" onchange="this.form.submit()" />
 </form>
 
+
 <!-- Choose map -->
 <h3>Choose Map</h3>
 
@@ -73,9 +74,16 @@
 
 <!-- OSM Map Upload -->
 <h3>Upload and View OSM Map</h3>
-<form enctype="multipart/form-data" id="osmUploadForm">
-    <input type="file" id="osmFileInput" accept=".osm" />
+
+<form method="post" enctype="multipart/form-data" id="osmUploadForm">
+    <label for="osmFile">Choose an OSM File</label>
+    <input type="file" name="osmFile" id="osmFileInput" accept=".osm" />
 </form>
+
+@if (Model.UploadSuccess)
+{
+    <p>File uploaded successfully!</p>
+}
 
 <!-- Map and Save Button -->
 <div id="map"></div>
