@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
+<<<<<<< HEAD
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -19,11 +20,31 @@ namespace WebApplication2.Pages
         public List<UAV> UAVs { get; set; } = new List<UAV>();
         public string GeoJsonData { get; set; }
         public string OsmData { get; set; } // For storing raw OSM data
+=======
+using System.Collections.Generic;
+
+namespace WebApplication2.Pages
+{
+    public class Strategy
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int UAVCount { get; set; }
+        public string MaxDuration { get; set; }
+        public string MaxRange { get; set; }
+        public string TransmissionSpeed { get; set; }
+    }
+
+    public class ChooseStrategiesModel : PageModel
+    {
+>>>>>>> parent of e38838a (Trans parameter to step 2)
         public List<Strategy> Strategies { get; set; }
 
         // Handle file upload
         public void OnPost(IFormFile osmFile)
         {
+<<<<<<< HEAD
             if (osmFile != null && osmFile.Length > 0)
             {
                 // Path to save the uploaded file
@@ -45,6 +66,8 @@ namespace WebApplication2.Pages
             GeoJsonData = HttpContext.Session.GetString("GeoJsonData") ?? string.Empty;
 
             // Define strategies
+=======
+>>>>>>> parent of e38838a (Trans parameter to step 2)
             Strategies = new List<Strategy>
             {
                 new Strategy
@@ -52,7 +75,11 @@ namespace WebApplication2.Pages
                     Id = 1,
                     Name = "Thuật toán 1",
                     Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
+<<<<<<< HEAD
                     UAVCount = UAVs.Count,
+=======
+                    UAVCount = 13,
+>>>>>>> parent of e38838a (Trans parameter to step 2)
                     MaxDuration = "5 giờ",
                     MaxRange = "10km",
                     TransmissionSpeed = "50Mbps"
@@ -62,7 +89,11 @@ namespace WebApplication2.Pages
                     Id = 2,
                     Name = "Thuật toán 2",
                     Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
+<<<<<<< HEAD
                     UAVCount = UAVs.Count,
+=======
+                    UAVCount = 10,
+>>>>>>> parent of e38838a (Trans parameter to step 2)
                     MaxDuration = "1.5 giờ",
                     MaxRange = "8km",
                     TransmissionSpeed = "40Mbps"
@@ -72,7 +103,11 @@ namespace WebApplication2.Pages
                     Id = 3,
                     Name = "Thuật toán 3",
                     Description = "Sử dụng mô hình học máy để tối ưu hóa...",
+<<<<<<< HEAD
                     UAVCount = UAVs.Count,
+=======
+                    UAVCount = 15,
+>>>>>>> parent of e38838a (Trans parameter to step 2)
                     MaxDuration = "2.5 giờ",
                     MaxRange = "12km",
                     TransmissionSpeed = "60Mbps"

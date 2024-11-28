@@ -28,8 +28,13 @@
 </form>
 
 <div>
+<<<<<<< HEAD
     <div>UAV data: @Model.UAVs.Count</div>
     <div>Area: @Model.GeoJsonData.Length km²</div>
+=======
+    <div>UAV data: 24</div>
+    <div>Area: 24km^2 </div>
+>>>>>>> parent of e38838a (Trans parameter to step 2)
 </div>
 
 <div id="map"></div>
@@ -94,3 +99,11 @@ else
         <button onclick="chooseOption(@(strategy.Id))" class="btn btn-primary">Choose</button>
     </div>
 }
+<<<<<<< HEAD
+=======
+<script>
+    function chooseOption(option) {
+        window.location.href = '/StrategyDetails/' + option;
+    }
+</script>
+>>>>>>> parent of e38838a (Trans parameter to step 2)
