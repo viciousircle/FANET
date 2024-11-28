@@ -249,6 +249,10 @@
       "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.map"
     },
     {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/uploads/map (5).osm",
+      "PackagePath": "staticwebassets/uploads/map (5).osm"
+    },
+    {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.WebApplication2.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

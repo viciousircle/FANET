@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "uxtVlvIXI5/4l+V7pjnCmFvvuAzdoOK1FfyZPImbWI8=",
+  "Hash": "RH5g5z6TGYzlP2XTCao90fn1XU9xCY6U/XgdpfysYts=",
   "Source": "WebApplication2",
   "BasePath": "_content/WebApplication2",
   "Mode": "Default",
@@ -1212,6 +1212,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/lib/jquery/LICENSE.txt"
+    },
+    {
+      "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/uploads/map (5).osm",
+      "SourceId": "WebApplication2",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/",
+      "BasePath": "_content/WebApplication2",
+      "RelativePath": "uploads/map (5).osm",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/uploads/map (5).osm"
     }
   ]
 }
