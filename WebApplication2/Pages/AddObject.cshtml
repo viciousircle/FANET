@@ -89,25 +89,34 @@
         }
 
         const reader = new FileReader();
-        reader.onload = function (e) {
-            const osmData = e.target.result;
-            try {
-                const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
-                if (!geoJsonData || !geoJsonData.features) {
-                    throw new Error('Invalid GeoJSON data.');
-                }
+reader.onload = function (e) {
+    const osmData = e.target.result;
+    try {
+        const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+        if (!geoJsonData || !geoJsonData.features) {
+            throw new Error('Invalid GeoJSON data.');
+        }
 
-                const geoJsonLayer = L.geoJSON(geoJsonData.features.filter(feature =>
-                    ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
-                ), { style: { color: '#0078FF', weight: 2 } });
+        // Filter features to only include buildings
+        const buildingFeatures = geoJsonData.features.filter(feature => 
+            feature.properties && feature.properties.building // Check for 'building' tag
+            && ['Polygon', 'MultiPolygon'].includes(feature.geometry.type) // Ensure valid geometry types
+        );
 
-                geoJsonLayer.addTo(map);
-                map.fitBounds(geoJsonLayer.getBounds());
-            } catch (error) {
-                console.error('Error processing OSM file:', error);
-                alert('Invalid OSM file format.');
-            }
-        };
+        if (buildingFeatures.length === 0) {
+            throw new Error('No buildings found in the OSM data.');
+        }
+
+        const geoJsonLayer = L.geoJSON(buildingFeatures, { style: { color: '#0078FF', weight: 2 } });
+
+        geoJsonLayer.addTo(map);
+        map.fitBounds(geoJsonLayer.getBounds());
+    } catch (error) {
+        console.error('Error processing OSM file:', error);
+        alert('Invalid OSM file format or no buildings found.');
+    }
+};
+
         reader.readAsText(file);
     });
 
