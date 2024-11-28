@@ -28,37 +28,6 @@ namespace WebApplication2.Pages
         [BindProperty]
         public string GeoJsonData { get; set; }
 
-        // public async Task<IActionResult> OnPostAsync()
-        // {
-        //     if (JsonFile == null || JsonFile.Length == 0)
-        //     {
-        //         ModelState.AddModelError("", "Please upload a valid JSON file.");
-        //         return Page();
-        //     }
-
-        //     using (var reader = new StreamReader(JsonFile.OpenReadStream()))
-        //     {
-        //         var json = await reader.ReadToEndAsync();
-        //         try
-        //         {
-        //             var uavsList = JsonConvert.DeserializeObject<UAVsList>(json);
-        //             if (uavsList?.UAVs == null || uavsList.UAVs.Count == 0)
-        //             {
-        //                 ModelState.AddModelError("", "The JSON file does not contain UAV data.");
-        //                 return Page();
-        //             }
-        //             UAVs = uavsList.UAVs;
-        //             HttpContext.Session.SetString("UAVData", JsonConvert.SerializeObject(UAVs));
-        //         }
-        //         catch (JsonException)
-        //         {
-        //             ModelState.AddModelError("", "Invalid JSON format.");
-        //         }
-        //     }
-
-        //     return Page();
-        // }
-
 
         public async Task<IActionResult> OnPostAsync()
         {
