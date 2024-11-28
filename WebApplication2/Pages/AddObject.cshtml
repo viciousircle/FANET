@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "UAV";
 }
+
 <head>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -19,13 +20,22 @@
 
 <h2>Step 1: Upload UAV Data & View Map</h2>
 
-<!-- Upload JSON File -->
+<!-- UAV Data Upload Form -->
 <h3>Upload UAV JSON File</h3>
-<form enctype="multipart/form-data" method="post">
-    <input type="file" name="JsonFile" accept=".json" />
-    <button type="submit">Upload JSON</button>
+<form enctype="multipart/form-data" method="post" id="uavUploadForm">
+    <input type="file" name="JsonFile" accept=".json" onchange="this.form.submit()" />
 </form>
 
+<!-- Choose map -->
+<h3>Choose Map</h3>
+
+<!-- Radius Control -->
+<h3>Change Radius of Area</h3>
+<label for="radiusInput">Radius:</label>
+<input type="number" id="radiusInput" value="100" min="0" step="10" />
+<button id="updateRadiusButton">Update Radius</button>
+
+<!-- Error Messages -->
 @if (!ModelState.IsValid)
 {
     <div style="color:red;">
@@ -38,6 +48,7 @@
     </div>
 }
 
+<!-- Display UAV Data -->
 @if (Model.UAVs != null && Model.UAVs.Any())
 {
     <h3>UAV Data</h3>
@@ -60,11 +71,13 @@
     </table>
 }
 
+<!-- OSM Map Upload -->
 <h3>Upload and View OSM Map</h3>
 <form enctype="multipart/form-data" id="osmUploadForm">
     <input type="file" id="osmFileInput" accept=".osm" />
 </form>
 
+<!-- Map and Save Button -->
 <div id="map"></div>
 <button id="saveMapButton">Save Map</button>
 
@@ -75,72 +88,116 @@
 
 <a asp-page="/ChooseStrategies">Next Step</a>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+
 <script>
-    // Initialize the map
+    // Map and Layer Initialization
     const map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-    // Handle OSM file upload
+    let buildingLayer, centerMarker, radiusCircle, croppedBuildings = [];
+    let buildingFeatures = [];
+    let centerCoordinates = [];
+
+    function clearMap() {
+        if (buildingLayer) map.removeLayer(buildingLayer);
+        if (centerMarker) map.removeLayer(centerMarker);
+        if (radiusCircle) map.removeLayer(radiusCircle);
+    }
+
+    // OSM File Upload and Map Rendering
     document.getElementById('osmFileInput').addEventListener('change', function (event) {
         const file = event.target.files[0];
-        if (!file) {
-            alert('Please select a valid OSM file.');
-            return;
-        }
+        if (!file) return alert('Please select a valid OSM file.');
 
         const reader = new FileReader();
-reader.onload = function (e) {
-    const osmData = e.target.result;
-    try {
-        const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
-        if (!geoJsonData || !geoJsonData.features) {
-            throw new Error('Invalid GeoJSON data.');
-        }
+        reader.onload = function (e) {
+            const osmData = e.target.result;
+            try {
+                const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+                if (!geoJsonData || !geoJsonData.features) throw new Error('Invalid GeoJSON data.');
 
-        // Filter features to only include buildings
-        const buildingFeatures = geoJsonData.features.filter(feature => 
-            feature.properties && feature.properties.building // Check for 'building' tag
-            && ['Polygon', 'MultiPolygon'].includes(feature.geometry.type) // Ensure valid geometry types
-        );
+                clearMap();
 
-        if (buildingFeatures.length === 0) {
-            throw new Error('No buildings found in the OSM data.');
-        }
+                buildingFeatures = geoJsonData.features.filter(feature =>
+                    feature.properties?.building &&
+                    ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
+                );
 
-        const geoJsonLayer = L.geoJSON(buildingFeatures, { style: { color: '#0078FF', weight: 2 } });
+                buildingLayer = L.geoJSON(buildingFeatures, {
+                    style: { color: 'gray', weight: 2 }
+                }).addTo(map);
 
-        geoJsonLayer.addTo(map);
-        map.fitBounds(geoJsonLayer.getBounds());
-    } catch (error) {
-        console.error('Error processing OSM file:', error);
-        alert('Invalid OSM file format or no buildings found.');
-    }
-};
+                map.fitBounds(buildingLayer.getBounds());
+
+                const centroid = turf.centroid(geoJsonData);
+                centerCoordinates = centroid.geometry.coordinates;
+
+                centerMarker = L.circleMarker([centerCoordinates[1], centerCoordinates[0]], {
+                    color: 'red',
+                    radius: 5
+                }).addTo(map);
+
+                updateRadiusCircle(parseFloat(document.getElementById('radiusInput').value));
+            } catch (error) {
+                alert('Invalid OSM file format or no buildings found.');
+            }
+        };
 
         reader.readAsText(file);
     });
 
-    // Save GeoJSON map data
+    // Radius Circle Update
+    function updateRadiusCircle(radiusInMeters) {
+        if (isNaN(radiusInMeters) || radiusInMeters <= 0) return alert('Please enter a valid radius value.');
+
+        if (radiusCircle) map.removeLayer(radiusCircle);
+
+        radiusCircle = L.circle([centerCoordinates[1], centerCoordinates[0]], {
+            color: 'pink',
+            fillColor: 'pink',
+            fillOpacity: 0.3,
+            radius: radiusInMeters
+        }).addTo(map);
+
+        croppedBuildings = buildingFeatures
+            .map(feature => turf.intersect(feature, turf.circle(centerCoordinates, radiusInMeters / 1000, { units: 'kilometers' })))
+            .filter(croppedFeature => croppedFeature !== null);
+
+        if (buildingLayer) map.removeLayer(buildingLayer);
+
+        buildingLayer = L.geoJSON(croppedBuildings, {
+            style: { color: '#0078FF', weight: 2 }
+        }).addTo(map);
+    }
+
+    // Update Radius on Button Click
+    document.getElementById('updateRadiusButton').addEventListener('click', function () {
+        const newRadius = parseFloat(document.getElementById('radiusInput').value);
+        updateRadiusCircle(newRadius);
+    });
+
+    // Add an event listener for the 'Enter' key in the radius input field
+document.getElementById('radiusInput').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+        const newRadius = parseFloat(document.getElementById('radiusInput').value);
+        updateRadiusCircle(newRadius);
+    }
+});
+
+
+    // Save GeoJSON Data
     document.getElementById('saveMapButton').addEventListener('click', function () {
-        map.eachLayer(function (layer) {
-            if (layer instanceof L.GeoJSON) {
-                const geoJsonData = layer.toGeoJSON();
-                fetch('/AddObject?handler=SaveGeoJson', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(geoJsonData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Map saved successfully!');
-                    } else {
-                        alert('Failed to save map.');
-                    }
-                })
-                .catch(error => console.error('Error saving map:', error));
-            }
-        });
+        if (!buildingLayer) return alert('No map data to save.');
+
+        const geoJsonData = buildingLayer.toGeoJSON();
+        fetch('/AddObject?handler=SaveGeoJson', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geoJsonData)
+        })
+            .then(response => response.json())
+            .then(data => alert(data.success ? 'Map saved successfully!' : 'Failed to save map.'))
+            .catch(error => console.error('Error saving map:', error));
     });
 </script>
-
