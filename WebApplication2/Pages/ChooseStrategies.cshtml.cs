@@ -9,7 +9,6 @@ namespace WebApplication2.Pages
 {
     public class ChooseStrategiesModel : PageModel
     {
-        // UAV and Strategy Classes
         public class UAV
         {
             public int Id { get; set; }
@@ -40,47 +39,20 @@ namespace WebApplication2.Pages
         public List<UAV> UAVs { get; set; } = new List<UAV>();
         public string GeoJsonData { get; set; }
         public string OsmData { get; set; }
-        public List<Strategy> Strategies { get; set; }
+        public List<Strategy> Strategies { get; set; } = new List<Strategy>();
 
-        // Constructor for initializing Strategies based on UAV count
-        private void InitializeStrategies()
+        // Đọc dữ liệu từ JSON
+        private List<T> ReadDataFromJson<T>(string fileName)
         {
-            Strategies = new List<Strategy>
+            var filePath = Path.Combine(_env.WebRootPath, "data", fileName);
+            if (System.IO.File.Exists(filePath))
             {
-                new Strategy
-                {
-                    Id = 1,
-                    Name = "Centralized + AODV + Geographical + Handover",
-                    Description = "Sử dụng UAV với thuật toán định tuyến tối ưu...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "5 giờ",
-                    MaxRange = "10km",
-                    TransmissionSpeed = "50Mbps"
-                },
-                new Strategy
-                {
-                    Id = 2,
-                    Name = "Thuật toán 2",
-                    Description = "Sử dụng mạng cảm biến để thu thập dữ liệu...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "1.5 giờ",
-                    MaxRange = "8km",
-                    TransmissionSpeed = "40Mbps"
-                },
-                new Strategy
-                {
-                    Id = 3,
-                    Name = "Thuật toán 3",
-                    Description = "Sử dụng mô hình học máy để tối ưu hóa...",
-                    UAVCount = UAVs.Count,
-                    MaxDuration = "2.5 giờ",
-                    MaxRange = "12km",
-                    TransmissionSpeed = "60Mbps"
-                }
-            };
+                var jsonData = System.IO.File.ReadAllText(filePath);
+                return JsonConvert.DeserializeObject<List<T>>(jsonData);
+            }
+            return new List<T>();
         }
 
-        // Handle file upload and set session data
         public void OnPost(IFormFile osmFile)
         {
             if (osmFile != null && osmFile.Length > 0)
@@ -98,18 +70,23 @@ namespace WebApplication2.Pages
                 OsmData = System.IO.File.ReadAllText(filePath);
             }
 
-            // Retrieve UAVs and GeoJSON data from session
-            UAVs = JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData") ?? "[]");
-            GeoJsonData = HttpContext.Session.GetString("GeoJsonData") ?? string.Empty;
+            // Đọc dữ liệu UAV từ JSON
+            UAVs = ReadDataFromJson<UAV>("UAVData.json");
 
-            // Initialize Strategies
-            InitializeStrategies();
+            // Đọc dữ liệu chiến lược từ JSON
+            Strategies = ReadDataFromJson<Strategy>("Strategies.json");
+
+            // Retrieve GeoJSON data from session
+            GeoJsonData = HttpContext.Session.GetString("GeoJsonData") ?? string.Empty;
         }
 
-        // Handle GET request
         public void OnGet()
         {
-            UAVs = JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData") ?? "[]");
+            // Đọc UAVs và Strategies từ JSON
+            UAVs = ReadDataFromJson<UAV>("UAVData.json");
+            Strategies = ReadDataFromJson<Strategy>("Strategies.json");
+
+            // Retrieve GeoJSON data from session
             GeoJsonData = HttpContext.Session.GetString("GeoJsonData") ?? string.Empty;
 
             // Set default values if no file uploaded
@@ -118,9 +95,6 @@ namespace WebApplication2.Pages
                 OSMFilePath = "No file found.";
                 OsmData = string.Empty;
             }
-
-            // Initialize Strategies
-            InitializeStrategies();
         }
     }
 }

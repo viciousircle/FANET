@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets/css/site.css"
     },
     {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/data/strategies.json",
+      "PackagePath": "staticwebassets/data/strategies.json"
+    },
+    {
       "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/favicon.ico",
       "PackagePath": "staticwebassets/favicon.ico"
     },

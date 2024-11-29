@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "h75+OPGWRCXFtaLMEU4h4cdLO73ygilTPCOMPIC6kz0=",
+  "Hash": "81MqtkITUO1iJXNKdzI1zYd/5y6m5O7IQ5yaSYtn7e8=",
   "Source": "WebApplication2",
   "BasePath": "_content/WebApplication2",
   "Mode": "Default",
@@ -110,6 +110,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/css/site.css"
+    },
+    {
+      "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/data/strategies.json",
+      "SourceId": "WebApplication2",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/",
+      "BasePath": "_content/WebApplication2",
+      "RelativePath": "data/strategies.json",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/data/strategies.json"
     },
     {
       "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/favicon.ico",
