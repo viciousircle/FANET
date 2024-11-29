@@ -1,4 +1,11 @@
+// using WebApplication2.Services.ProtocolTypes;
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Register AODVProtocol as a service
+// builder.Services.AddScoped<AODVProtocol>(); // Registering AODVProtocol
+
 
 // Add services to the container.
 builder.Services.AddRazorPages();
