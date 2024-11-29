@@ -1,102 +1,217 @@
 ﻿@page
 @model WebApplication2.Pages.ChooseStrategiesModel
 @{
-    ViewData["Title"] = "Step 2";
+    ViewData["Title"] = "Step 2: Choose Strategies";
 }
 
 <head>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="~/css/choose-strategies.css">
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/osmtogeojson/osmtogeojson.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
     <style>
         #map {
-            height: 500px;
-            width: 100%;
+            height: 350px;
+            width: 60%;
         }
     </style>
 </head>
 
-<h1>Step 2: Choose Strategies</h1>
+<h1>@ViewData["Title"]</h1>
 
-<!-- File Upload Form -->
-<form method="post" enctype="multipart/form-data">
-    <label for="osmFile">Upload OSM File:</label>
-    <input type="file" id="osmFile" name="osmFile" accept=".osm" />
-    <button type="submit">Upload</button>
-</form>
+<div class="box-map">
+    <div>
+        <form enctype="multipart/form-data" id="osmUploadForm">
+            <label for="osmFileInput">Upload OSM File:</label>
+            <input type="file" id="osmFileInput" accept=".osm" />
+        </form>
 
-<div>
-    <div>UAV data: @Model.UAVs.Count</div>
-    <div>Area: @Model.GeoJsonData.Length km²</div>
+        <div>
+            <div>UAV data: @Model.UAVs.Count</div>
+            <div id="areaOutput">Area: 0 m^2</div>
+        </div>
+
+
+        <div>
+            <label for="radiusInput">Radius:</label>
+            <input type="number" id="radiusInput" value="100" min="0" step="10" />
+            <button id="updateRadiusButton">Update Radius</button>
+        </div>
+    </div>
+
+
+
+    <div id="map"></div>
 </div>
 
-<div id="map"></div>
+<h2>Suggested Strategies</h2>
+<div class="suggested-section">
+    <div class="filter-section">
+        <div>
+            <label for="networkType">Network Type:</label>
+            <select id="networkType">
+                <option value="decentralized">Decentralized Network</option>
+                <option value="centralized">Centralized Network</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="protocolType">Protocol Type:</label>
+            <select id="protocolType">
+                <option value="aodv">AODV</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="routingType">Routing Type:</label>
+            <select id="routingType">
+                <option value="geographic">Geographic</option>
+                <option value="clusterhead">Clusterhead</option>
+                <option value="energy">Energy</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="handoverType">Handover:</label>
+            <select id="handoverType">
+                <option value="handover1">Handover </option>
+            </select>
+        </div>
+    </div>
+
+
+    @foreach (var strategy in Model.Strategies)
+    {
+        <div class="strategy-option">
+            <h3>Option @(strategy.Id): @(strategy.Name)</h3>
+            <p><strong>Technology:</strong> @(strategy.Description)</p>
+            <div>
+                <div>UAVs: @(strategy.UAVCount)</div>
+                <div>Max Duration: @(strategy.MaxDuration) hours</div>
+                <div>Max Range: @(strategy.MaxRange) km</div>
+                <div>Transmission Speed: @(strategy.TransmissionSpeed) Mbps</div>
+            </div>
+            <button onclick="chooseStrategy(@(strategy.Id))" class="btn btn-primary">Choose</button>
+        </div>
+    }
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 
 <script>
-    // Initialize Map
+    // Initialize map
     const map = L.map('map').setView([0, 0], 2);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-    // OSM Data from the server (Raw XML)
-    var osmData = `@Model.OsmData`.trim();
+    let buildingLayer, centerMarker, radiusCircle, croppedBuildings = [];
+    let buildingFeatures = [];
+    let centerCoordinates = [];
 
-    if (osmData) {
-        try {
-            // Convert OSM data to GeoJSON
-            const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
-
-            // Filter only buildings
-            const buildingFeatures = geoJsonData.features.filter(feature =>
-                feature.properties?.building &&
-                ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
-            );
-
-            // Add buildings to the map
-            const buildingLayer = L.geoJSON(buildingFeatures, {
-                style: { color: 'gray', weight: 2 }
-            }).addTo(map);
-
-            // Fit map bounds to building layer
-            map.fitBounds(buildingLayer.getBounds());
-        } catch (error) {
-            console.error("Error parsing OSM data:", error);
-            alert("Failed to load OSM data.");
-        }
-    } else {
-        console.warn("No OSM data available.");
+    // Clear all layers
+    function clearMap() {
+        if (buildingLayer) map.removeLayer(buildingLayer);
+        if (centerMarker) map.removeLayer(centerMarker);
+        if (radiusCircle) map.removeLayer(radiusCircle);
     }
-</script>
 
-@if (Model.OSMFilePath != "No file found.")
-{
-    <p>The uploaded OSM file is located at: @Model.OSMFilePath</p>
-}
-else
-{
-    <p>No OSM file has been uploaded yet.</p>
-}
+    // Handle OSM File Upload
+    document.getElementById('osmFileInput').addEventListener('change', handleOSMFileUpload);
 
-<p>Here are some suggested strategies:</p>
+    function handleOSMFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return alert('Please select a valid OSM file.');
 
-@foreach (var strategy in Model.Strategies)
-{
-    <div>
-        <h3>Option @(strategy.Id): @(strategy.Name)</h3>
-        <p><strong>Technology:</strong> @(strategy.Description)</p>
-        <div>
-            <div>UAVs: @(strategy.UAVCount)</div>
-            <div>Max Duration: @(strategy.MaxDuration)</div>
-            <div>Max Range: @(strategy.MaxRange)</div>
-            <div>Transmission Speed: @(strategy.TransmissionSpeed)</div>
-        </div>
-        <button onclick="chooseOption(@(strategy.Id))" class="btn btn-primary">Choose</button>
-    </div>
-}
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const osmData = e.target.result;
+            try {
+                const geoJsonData = osmtogeojson(new DOMParser().parseFromString(osmData, 'text/xml'));
+                if (!geoJsonData || !geoJsonData.features) throw new Error('Invalid GeoJSON data.');
 
-<script>
-    function chooseOption(option) {
-        window.location.href = '/StrategyDetails/' + option;
+                clearMap();
+
+                // Filter buildings
+                buildingFeatures = geoJsonData.features.filter(feature =>
+                    feature.properties?.building &&
+                    ['Polygon', 'MultiPolygon'].includes(feature.geometry.type)
+                );
+
+                // Add buildings layer
+                buildingLayer = L.geoJSON(buildingFeatures, {
+                    style: { color: 'gray', weight: 2 }
+                }).addTo(map);
+
+                map.fitBounds(buildingLayer.getBounds());
+
+                // Add centroid marker
+                const centroid = turf.centroid(geoJsonData);
+                centerCoordinates = centroid.geometry.coordinates;
+                centerMarker = L.circleMarker([centerCoordinates[1], centerCoordinates[0]], {
+                    color: 'red',
+                    radius: 5
+                }).addTo(map);
+
+                // Update radius circle
+                updateRadiusCircle(parseFloat(document.getElementById('radiusInput').value));
+            } catch (error) {
+                alert('Invalid OSM file format or no buildings found.');
+            }
+        };
+
+        reader.readAsText(file);
+    }
+
+    // Update radius circle on the map
+    function updateRadiusCircle(radiusInMeters) {
+        if (isNaN(radiusInMeters) || radiusInMeters <= 0) return alert('Please enter a valid radius value.');
+
+        if (radiusCircle) map.removeLayer(radiusCircle);
+
+        radiusCircle = L.circle([centerCoordinates[1], centerCoordinates[0]], {
+            color: 'pink',
+            fillColor: 'pink',
+            fillOpacity: 0.3,
+            radius: radiusInMeters
+        }).addTo(map);
+
+        // Calculate the area of the circle (in square meters)
+        const areaInSqMeters = Math.PI * Math.pow(radiusInMeters, 2);
+        const areaInSqKm = areaInSqMeters / 1000000; // Convert to square kilometers
+
+        // Update the area on the page
+        document.getElementById('areaOutput').textContent = `Area: ${areaInSqKm.toFixed(2)} km²`;
+
+        // Crop buildings within the radius
+        croppedBuildings = buildingFeatures
+            .map(feature => turf.intersect(feature, turf.circle(centerCoordinates, radiusInMeters / 1000, { units: 'kilometers' })))
+            .filter(croppedFeature => croppedFeature !== null);
+
+        if (buildingLayer) map.removeLayer(buildingLayer);
+
+        buildingLayer = L.geoJSON(croppedBuildings, {
+            style: { color: '#0078FF', weight: 2 }
+        }).addTo(map);
+    }
+
+    // Event listener to update radius circle
+    document.getElementById('updateRadiusButton').addEventListener('click', function () {
+        const newRadius = parseFloat(document.getElementById('radiusInput').value);
+        updateRadiusCircle(newRadius);
+    });
+
+    // Event listener to update radius on Enter key press
+    document.getElementById('radiusInput').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            const newRadius = parseFloat(document.getElementById('radiusInput').value);
+            updateRadiusCircle(newRadius);
+        }
+    });
+
+    // Navigate to strategy details page
+    function chooseStrategy(optionId) {
+        window.location.href = '/StrategyDetails/' + optionId;
     }
 </script>

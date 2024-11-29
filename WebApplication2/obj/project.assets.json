@@ -50,9 +50,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net8.0": [
-      "Newtonsoft.Json >= 13.0.3"
-    ]
+    "net8.0": ["Newtonsoft.Json >= 13.0.3"]
   },
   "packageFolders": {
     "/Users/a8888/.nuget/packages/": {}
@@ -66,12 +64,8 @@
       "packagesPath": "/Users/a8888/.nuget/packages/",
       "outputPath": "/Users/a8888/Desktop/WebApplication2/WebApplication2/obj/",
       "projectStyle": "PackageReference",
-      "configFilePaths": [
-        "/Users/a8888/.nuget/NuGet/NuGet.Config"
-      ],
-      "originalTargetFrameworks": [
-        "net8.0"
-      ],
+      "configFilePaths": ["/Users/a8888/.nuget/NuGet/NuGet.Config"],
+      "originalTargetFrameworks": ["net8.0"],
       "sources": {
         "/usr/local/share/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
@@ -83,9 +77,7 @@
         }
       },
       "warningProperties": {
-        "warnAsError": [
-          "NU1605"
-        ]
+        "warnAsError": ["NU1605"]
       },
       "restoreAuditProperties": {
         "enableAudit": "true",

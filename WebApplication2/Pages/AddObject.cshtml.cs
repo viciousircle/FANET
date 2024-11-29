@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace WebApplication2.Pages
 {
+
     public class AddObjectModel : PageModel
     {
         public class UAV
