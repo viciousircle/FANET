@@ -4,3 +4,5 @@
 *.cache
 *.props
 *.cache
+/WebApplication2/bin/Debug/net8.0
+/WebApplication2/bin
