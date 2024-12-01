@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "BfUm7iFUmIo=",
+  "dgSpecHash": "bYiA+JUAaHM=",
   "success": true,
-  "projectFilePath": "/Users/a8888/Desktop/WebApplication2/WebApplication2/WebApplication2.csproj",
+  "projectFilePath": "X:\\icde\\FANETwebapp\\FANET\\WebApplication2\\WebApplication2.csproj",
   "expectedPackageFiles": [
-    "/Users/a8888/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512"
+    "C:\\Users\\namch\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
   ],
   "logs": []
 }
