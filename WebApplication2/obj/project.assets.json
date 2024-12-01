@@ -50,24 +50,36 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net8.0": ["Newtonsoft.Json >= 13.0.3"]
+    "net8.0": [
+      "Newtonsoft.Json >= 13.0.3"
+    ]
   },
   "packageFolders": {
-    "/Users/a8888/.nuget/packages/": {}
+    "C:\\Users\\HP\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/a8888/Desktop/WebApplication2/WebApplication2/WebApplication2.csproj",
+      "projectUniqueName": "E:\\code\\fanet\\FANET\\WebApplication2\\WebApplication2.csproj",
       "projectName": "WebApplication2",
-      "projectPath": "/Users/a8888/Desktop/WebApplication2/WebApplication2/WebApplication2.csproj",
-      "packagesPath": "/Users/a8888/.nuget/packages/",
-      "outputPath": "/Users/a8888/Desktop/WebApplication2/WebApplication2/obj/",
+      "projectPath": "E:\\code\\fanet\\FANET\\WebApplication2\\WebApplication2.csproj",
+      "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
+      "outputPath": "E:\\code\\fanet\\FANET\\WebApplication2\\obj\\",
       "projectStyle": "PackageReference",
-      "configFilePaths": ["/Users/a8888/.nuget/NuGet/NuGet.Config"],
-      "originalTargetFrameworks": ["net8.0"],
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\HP\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
       "sources": {
-        "/usr/local/share/dotnet/library-packs": {},
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -77,13 +89,16 @@
         }
       },
       "warningProperties": {
-        "warnAsError": ["NU1605"]
+        "warnAsError": [
+          "NU1605"
+        ]
       },
       "restoreAuditProperties": {
         "enableAudit": "true",
         "auditLevel": "low",
-        "auditMode": "direct"
-      }
+        "auditMode": "all"
+      },
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net8.0": {
@@ -113,7 +128,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.404/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
