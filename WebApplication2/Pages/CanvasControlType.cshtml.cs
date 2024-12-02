@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Newtonsoft.Json;
 
 namespace WebApplication2.Pages
 {
@@ -19,12 +20,22 @@ namespace WebApplication2.Pages
 
         public List<UAV> UAVs { get; set; } = new List<UAV>();
 
-        public void OnGet()
+        public IActionResult OnPostUpdateConfig([FromBody] UAVConfig config)
         {
+            // Update properties based on the received config
+            NumUAVs = config.NumUAVs;
+            UAVSpeed = config.Speed;
+            CommunicationRadius = config.Radius;
+            PacketLossChance = config.PacketLoss;
+
+            // Re-initialize UAVs with the new configuration
             InitializeUAVs();
+
+            // Return updated UAVs as JSON
+            return new JsonResult(new { UAVs = UAVs });
         }
 
-        public void OnPost()
+        public void OnGet()
         {
             InitializeUAVs();
         }
@@ -40,13 +51,23 @@ namespace WebApplication2.Pages
                     Y = new Random().NextDouble() * 600,  // Random y-coordinate
                     Speed = UAVSpeed,
                     Radius = CommunicationRadius,
-                    Altitude = new Random().NextDouble() * 100  // Random altitude
+                    Altitude = new Random().NextDouble() * 100,  // Random altitude
+                    ID = i + 1  // Adding an ID for each UAV
                 });
             }
         }
 
+        public class UAVConfig
+        {
+            public int NumUAVs { get; set; }
+            public double Speed { get; set; }
+            public double Radius { get; set; }
+            public double PacketLoss { get; set; }
+        }
+
         public class UAV
         {
+            public int ID { get; set; }  // Unique identifier for each UAV
             public double X { get; set; }
             public double Y { get; set; }
             public double Speed { get; set; }

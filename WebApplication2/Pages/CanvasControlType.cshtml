@@ -2,7 +2,6 @@
 @model WebApplication2.Pages.CanvasControlTypeModel
 @{
     ViewData["Title"] = "Control Type";
-
 }
 
 <!DOCTYPE html>
@@ -21,7 +20,7 @@
     <h2 class="status">UAV Network Simulation - Transmission Status</h2>
 
     <!-- Form to adjust UAV configuration -->
-    <form method="post">
+    <form id="configForm" method="post">
         <label for="numUAVs">Number of UAVs:</label>
         <input type="number" id="numUAVs" name="numUAVs" value="@Model.NumUAVs" min="1" max="20">
 
@@ -40,10 +39,8 @@
     <canvas id="uavCanvas" width="800" height="600" style="border:1px solid black;"></canvas>
 
     <script>
-        // Inject UAVs data from the C# backend into the JavaScript
-        const uavs = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.UAVs));
-
-        console.log(uavs); // Log UAVs to verify the data
+        // Initialize UAVs with the data from the backend
+        let uavs = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.UAVs));
 
         const canvas = document.getElementById('uavCanvas');
         const ctx = canvas.getContext('2d');
@@ -63,12 +60,49 @@
                 ctx.arc(uav.X, uav.Y, 10, 0, 2 * Math.PI);
                 ctx.fillStyle = 'red';
                 ctx.fill();
+
+                // Optionally, draw labels for each UAV
+                ctx.font = '12px Arial';
+                ctx.fillStyle = 'black';
+                ctx.fillText(`UAV ${uav.ID}`, uav.X + 12, uav.Y);
             });
         }
 
         // Call the drawing function on page load
         document.addEventListener('DOMContentLoaded', drawUAVs);
+
+        // Handle form submission asynchronously (AJAX)
+        document.getElementById('configForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const formData = new FormData(this);
+            const config = {
+                numUAVs: formData.get('numUAVs'),
+                speed: formData.get('speed'),
+                radius: formData.get('radius'),
+                packetLoss: formData.get('packetLoss')
+            };
+
+            // Send updated config to the server using fetch
+            fetch('@Url.Page("CanvasControlType")', {
+                method: 'POST',
+                body: JSON.stringify(config),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Update UAVs data based on the new response
+                    uavs = data.UAVs;  // Replace the UAVs data with the updated one
+                    drawUAVs();  // Re-render UAVs with new data
+                })
+                .catch(error => console.error('Error updating UAV config:', error));
+        });
     </script>
+
+
+
 </body>
 
 </html>
