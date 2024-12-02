@@ -1,0 +1,640 @@
+﻿@page
+@model WebApplication2.Pages.TestModel
+@{
+    ViewData["Title"] = "UAV Network Simulation";
+}
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <!-- Include Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    @* <div id="map" style="width: 800px; height: 600px;"></div> *@
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+        }
+
+        h2,
+        h3 {
+            margin: 10px 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        canvas {
+            border: 1px solid black;
+            background-color: #f4f4f4;
+        }
+
+        .status,
+        .controls {
+            margin: 10px;
+        }
+
+        .controls label {
+            margin-right: 5px;
+        }
+
+        .controls input {
+            margin-right: 10px;
+        }
+
+        .controls button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background-color: #45a049;
+        }
+
+        #chartContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 400px;
+        }
+
+        canvas {
+            margin-bottom: 10px;
+        }
+
+        #notification {
+            margin: 10px;
+            color: red;
+            font-weight: bold;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .selected-uav {
+            stroke: blue;
+            stroke-width: 2;
+        }
+
+        #uavSpeedLabel {
+            margin-left: 10px;
+        }
+
+        #uavPathButton {
+            margin-top: 10px;
+            background-color: #2196F3;
+        }
+
+        #statsTableContainer {
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        #statsTable {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        #statsTable th,
+        #statsTable td {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        #statsTable th {
+            background-color: #f4f4f4;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+    <h2 class="status">UAV Network Simulation - Transmission Status</h2>
+
+    <div class="controls">
+        <label for="osmFile">Upload OSM File:</label>
+        <input type="file" id="osmFile" accept=".osm" onchange="handleOSMFileUpload(event)">
+    </div>
+
+
+    <div id="notification"></div>
+
+    <div class="controls">
+        <label for="numUAVs">Number of UAVs:</label>
+        <input type="number" id="numUAVs" value="5" min="1" max="20">
+        <label for="speed">UAV Speed:</label>
+        <input type="number" id="speed" value="2" min="1" max="10">
+        <label for="radius">Communication Radius:</label>
+        <input type="number" id="radius" value="80" min="50" max="150">
+        <label for="packetLoss">Packet Loss Chance (%):</label>
+        <input type="number" id="packetLoss" value="5" min="0" max="100">
+        <button onclick="updateUAVsConfig()">Update Configuration</button>
+        <button id="uavPathButton" onclick="toggleUAVPathControl()">Enable UAV Path Control</button>
+
+    </div>
+
+
+
+    <div class="container">
+        <canvas id="uavCanvas" width="800" height="600"></canvas>
+        <div id="chartContainer">
+            <canvas id="uavChart"></canvas>
+            <canvas id="uavOzChart"></canvas>
+        </div>
+        <div id="altitudeChartContainer">
+            <canvas id="altitudeChart"></canvas>
+        </div>
+
+    </div>
+
+    <div class="status">
+        <h3>UAV Network Information</h3>
+        <ul id="uavStatusList"></ul>
+    </div>
+
+    <div id="statsTableContainer">
+        <h3>Phân tích số liệu UAV</h3>
+        <table id="statsTable" border="1">
+            <thead>
+                <tr>
+                    <th>UAV</th>
+                    <th>Tọa độ X</th>
+                    <th>Tọa độ Y</th>
+                    <th>Độ cao (m)</th>
+                    <th>Tốc độ (px/s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dữ liệu sẽ được cập nhật bằng JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+
+    <script>
+        const canvas = document.getElementById('uavCanvas');
+        const ctx = canvas.getContext('2d');
+        const chartCtx = document.getElementById('uavChart').getContext('2d');
+        const ozCtx = document.getElementById('uavOzChart').getContext('2d');
+
+        let uavs = [];
+        let packetLossChance = 5;
+        let stats = { time: [], uavs: [], avgSpeed: [], packetLoss: [] };
+        let isPathControlEnabled = false;
+        let selectedUAV = null;
+
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        // Function to toggle the UAV Path Control
+        function toggleUAVPathControl() {
+            isPathControlEnabled = !isPathControlEnabled;
+            const button = document.getElementById('uavPathButton');
+            button.textContent = isPathControlEnabled ? 'Disable UAV Path Control' : 'Enable UAV Path Control';
+            showNotification(isPathControlEnabled ? 'UAV Path Control Enabled' : 'UAV Path Control Disabled', 'success');
+        }
+
+
+        const uavChart = new Chart(chartCtx, {
+            type: 'line',
+            data: {
+                labels: stats.time,
+                datasets: [
+                    { label: 'Number of UAVs', data: stats.uavs, borderColor: 'blue', tension: 0.1, fill: false },
+                    { label: 'Average Speed', data: stats.avgSpeed, borderColor: 'green', tension: 0.1, fill: false },
+                    { label: 'Packet Loss (%)', data: stats.packetLoss, borderColor: 'red', tension: 0.1, fill: false }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: { title: { display: true, text: 'Value' } }
+                }
+            }
+        });
+
+        const uavOzChart = new Chart(ozCtx, {
+            type: 'line',
+            data: {
+                labels: stats.time,
+                datasets: [
+                    {
+                        label: 'Communication Success Rate (%)',
+                        data: [],
+                        borderColor: 'orange',
+                        tension: 0.1,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: { title: { display: true, text: 'Success Rate (%)' }, min: 0, max: 100 }
+                }
+            }
+        });
+
+        const altitudeChartCtx = document.getElementById('altitudeChart').getContext('2d');
+
+        const altitudeChart = new Chart(altitudeChartCtx, {
+            type: 'line',
+            data: {
+                labels: stats.time,
+                datasets: [
+                    {
+                        label: 'Altitude (m)',
+                        data: stats.altitude,
+                        borderColor: 'purple',
+                        tension: 0.1,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: { title: { display: true, text: 'Altitude (m)' }, min: 0 }
+                }
+            }
+        });
+
+
+        function showNotification(message, type = 'error') {
+            const notification = document.getElementById('notification');
+            notification.style.display = 'block';
+            notification.style.color = type === 'error' ? 'red' : 'green';
+            notification.textContent = message;
+            setTimeout(() => (notification.style.display = 'none'), 3000);
+        }
+
+        function getRandomColor() {
+            return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        }
+
+        function drawUAVs() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            uavs.forEach(uav => {
+                ctx.beginPath();
+                ctx.arc(uav.x, uav.y, uav.radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(uav.x, uav.y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = uav.color;
+                ctx.fill();
+
+                if (uav === selectedUAV) {
+                    ctx.strokeStyle = 'blue';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            drawCommunicationLines();
+        }
+
+        function drawCommunicationLines() {
+            for (let i = 0; i < uavs.length; i++) {
+                for (let j = i + 1; j < uavs.length; j++) {
+                    const uav1 = uavs[i];
+                    const uav2 = uavs[j];
+                    const dist = Math.sqrt((uav1.x - uav2.x) ** 2 + (uav1.y - uav2.y) ** 2);
+                    const canCommunicate = dist < uav1.radius + uav2.radius;
+                    const packetLost = Math.random() * 100 < packetLossChance;
+
+                    const color = canCommunicate && !packetLost ? 'green' : 'red';
+                    ctx.beginPath();
+                    ctx.moveTo(uav1.x, uav1.y);
+                    ctx.lineTo(uav2.x, uav2.y);
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function updateUAVStatus() {
+            const statusList = document.getElementById('uavStatusList');
+            statusList.innerHTML = '';
+
+            uavs.forEach((uav, index) => {
+                const li = document.createElement('li');
+                li.textContent = `UAV ${index + 1}: (${uav.x.toFixed(2)}, ${uav.y.toFixed(2)}), Speed (${uav.dx.toFixed(2)}, ${uav.dy.toFixed(2)})`;
+                statusList.appendChild(li);
+            });
+        }
+
+        function updateChart() {
+            const avgSpeed = uavs.reduce((sum, uav) => sum + Math.sqrt(uav.dx ** 2 + uav.dy ** 2), 0) / uavs.length;
+            const packetLoss = Math.random() * 100;
+
+            // Update chart labels and datasets
+            const currentTime = stats.time.length;
+            stats.time.push(currentTime);
+            stats.uavs.push(uavs.length);
+            stats.avgSpeed.push(avgSpeed.toFixed(2));
+            stats.packetLoss.push(packetLoss.toFixed(2));
+
+            // Ensure labels and datasets are updated together
+            uavChart.data.labels.push(currentTime);
+            uavChart.data.datasets[0].data.push(uavs.length);
+            uavChart.data.datasets[1].data.push(avgSpeed.toFixed(2));
+            uavChart.data.datasets[2].data.push(packetLoss.toFixed(2));
+
+            uavChart.update();
+        }
+
+        function updateOzChart() {
+            const successfulCommunications = uavs.reduce((total, uav1, i) => {
+                return total + uavs.slice(i + 1).filter(uav2 => {
+                    const dist = Math.sqrt((uav1.x - uav2.x) ** 2 + (uav1.y - uav2.y) ** 2);
+                    return dist < uav1.radius + uav2.radius && Math.random() * 100 >= packetLossChance;
+                }).length;
+            }, 0);
+
+            const maxPossible = (uavs.length * (uavs.length - 1)) / 2;
+            const successRate = maxPossible > 0 ? (successfulCommunications / maxPossible) * 100 : 0;
+
+            const currentTime = stats.time.length;
+
+            // Update Oz chart
+            uavOzChart.data.labels.push(currentTime);
+            uavOzChart.data.datasets[0].data.push(successRate.toFixed(2));
+
+            uavOzChart.update();
+        }
+
+        function updateOzChart() {
+            const successfulCommunications = uavs.reduce((total, uav1, i) => {
+                return total + uavs.slice(i + 1).filter(uav2 => {
+                    const dist = Math.sqrt((uav1.x - uav2.x) ** 2 + (uav1.y - uav2.y) ** 2);
+                    return dist < uav1.radius + uav2.radius && Math.random() * 100 >= packetLossChance;
+                }).length;
+            }, 0);
+
+            const maxPossible = (uavs.length * (uavs.length - 1)) / 2;
+            const successRate = (successfulCommunications / maxPossible) * 100;
+
+            uavOzChart.data.labels.push(stats.time.length);
+            uavOzChart.data.datasets[0].data.push(successRate.toFixed(2));
+            uavOzChart.update();
+        }
+
+        function updateUAVs() {
+            const speed = parseFloat(document.getElementById('speed').value);
+
+            uavs.forEach(uav => {
+                uav.x += uav.dx * speed;
+                uav.y += uav.dy * speed;
+                uav.altitude += Math.random() * 2 - 1; // Sự thay đổi độ cao ngẫu nhiên
+                uav.altitude = Math.max(0, Math.min(100, uav.altitude)); // Giới hạn độ cao trong 0-100
+                if (uav.x < 0 || uav.x > canvas.width) uav.dx *= -1;
+                if (uav.y < 0 || uav.y > canvas.height) uav.dy *= -1;
+            });
+
+            drawUAVs();
+            updateUAVStatus();
+            updateChart();
+            updateOzChart();
+            updateAltitudeChart(); // Cập nhật đồ thị độ cao
+            updateStatsTable();    // Cập nhật bảng phân tích số liệu
+        }
+
+
+        function updateAltitudeChart() {
+            const avgAltitude = uavs.reduce((sum, uav) => sum + uav.altitude, 0) / uavs.length;
+
+            // Cập nhật dữ liệu đồ thị độ cao
+            const currentTime = stats.time.length;
+            stats.time.push(currentTime);
+            stats.altitude.push(avgAltitude.toFixed(2));
+
+            altitudeChart.data.labels.push(currentTime);
+            altitudeChart.data.datasets[0].data.push(avgAltitude.toFixed(2));
+
+            altitudeChart.update();
+        }
+
+        function updateStatsTable() {
+            const statsTableBody = document.querySelector("#statsTable tbody");
+            statsTableBody.innerHTML = ""; // Xóa nội dung cũ
+
+            uavs.forEach((uav, index) => {
+                // Tính tốc độ hiện tại của UAV
+                const speed = Math.sqrt(uav.dx ** 2 + uav.dy ** 2).toFixed(2);
+
+                // Tạo một hàng mới trong bảng
+                const row = `
+            <tr>
+                <td>UAV ${index + 1}</td>
+                <td>${uav.x.toFixed(2)}</td>
+                <td>${uav.y.toFixed(2)}</td>
+                <td>${uav.altitude.toFixed(2)}</td>
+                <td>${speed}</td>
+            </tr>
+        `;
+                statsTableBody.insertAdjacentHTML("beforeend", row);
+            });
+
+            // Thêm hàng tóm tắt (giá trị trung bình)
+            const avgAltitude =
+                uavs.reduce((sum, uav) => sum + uav.altitude, 0) / uavs.length;
+            const avgSpeed =
+                uavs.reduce((sum, uav) => sum + Math.sqrt(uav.dx ** 2 + uav.dy ** 2), 0) /
+                uavs.length;
+
+            const summaryRow = `
+        <tr>
+            <td><b>Trung bình</b></td>
+            <td>-</td>
+            <td>-</td>
+            <td><b>${avgAltitude.toFixed(2)}</b></td>
+            <td><b>${avgSpeed.toFixed(2)}</b></td>
+        </tr>
+    `;
+            statsTableBody.insertAdjacentHTML("beforeend", summaryRow);
+        }
+
+
+
+        function initializeUAVs() {
+            const numUAVs = parseInt(document.getElementById('numUAVs').value);
+            const radius = parseFloat(document.getElementById('radius').value);
+            packetLossChance = parseFloat(document.getElementById('packetLoss').value);
+
+            uavs = Array.from({ length: numUAVs }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                dx: Math.random() * 2 - 1,
+                dy: Math.random() * 2 - 1,
+                radius: radius,
+                color: getRandomColor(),
+                altitude: Math.random() * 100 // Độ cao của UAV ngẫu nhiên từ 0 đến 100
+            }));
+
+            stats = { time: [], uavs: [], avgSpeed: [], packetLoss: [], altitude: [] };
+
+            uavChart.data.labels = [];
+            uavChart.data.datasets.forEach(dataset => (dataset.data = []));
+
+            uavOzChart.data.labels = [];
+            uavOzChart.data.datasets[0].data = [];
+
+            altitudeChart.data.labels = [];  // Reset labels for altitude chart
+            altitudeChart.data.datasets[0].data = [];  // Reset dataset for altitude chart
+
+            drawUAVs();
+        }
+
+        function updateUAVsConfig() {
+            initializeUAVs();
+            showNotification('Configuration updated!', 'success');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUAVs();
+            setInterval(updateUAVs, 100);
+        });
+
+        // Add event listeners for mouse events
+        canvas.addEventListener('mousedown', (event) => {
+            if (isPathControlEnabled) {
+                const mouseX = event.offsetX;
+                const mouseY = event.offsetY;
+
+                // Check if any UAV is clicked
+                for (let i = 0; i < uavs.length; i++) {
+                    const uav = uavs[i];
+                    const dist = Math.sqrt((mouseX - uav.x) ** 2 + (mouseY - uav.y) ** 2);
+                    if (dist < uav.radius) {
+                        selectedUAV = uav;
+                        isDragging = true;
+                        dragOffsetX = mouseX - uav.x;
+                        dragOffsetY = mouseY - uav.y;
+                        break;
+                    }
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (event) => {
+            if (isDragging && selectedUAV) {
+                const mouseX = event.offsetX;
+                const mouseY = event.offsetY;
+                selectedUAV.x = mouseX - dragOffsetX;
+                selectedUAV.y = mouseY - dragOffsetY;
+                drawUAVs();
+                updateUAVStatus();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            selectedUAV = null;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            selectedUAV = null;
+        });
+
+
+        function handleOSMFileUpload(event) {
+            const file = event.target.files[0];
+            if (file && file.name.endsWith('.osm')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const osmData = e.target.result;
+                    parseOSMData(osmData);
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Please upload a valid OSM file.');
+            }
+        }
+
+        function parseOSMData(osmData) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(osmData, "application/xml");
+            const nodes = xmlDoc.getElementsByTagName('node');
+            const ways = xmlDoc.getElementsByTagName('way');
+
+            // Example: Convert nodes to an array of lat-lng positions for rendering roads/buildings
+            const nodesData = Array.from(nodes).map(node => ({
+                lat: parseFloat(node.getAttribute('lat')),
+                lon: parseFloat(node.getAttribute('lon')),
+            }));
+
+            console.log('Parsed Nodes:', nodesData);
+
+            // Optional: Parse and render ways (roads, buildings, etc.)
+            const waysData = Array.from(ways).map(way => {
+                const nds = way.getElementsByTagName('nd');
+                return Array.from(nds).map(nd => {
+                    const ref = nd.getAttribute('ref');
+                    const node = nodes[ref];
+                    return {
+                        lat: parseFloat(node.getAttribute('lat')),
+                        lon: parseFloat(node.getAttribute('lon')),
+                    };
+                });
+            });
+
+            console.log('Parsed Ways:', waysData);
+
+            renderMap(nodesData, waysData);
+        }
+
+
+
+
+    </script>
+</body>
+
+</html>
