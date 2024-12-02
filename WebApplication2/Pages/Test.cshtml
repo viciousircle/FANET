@@ -12,125 +12,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="~/css/test.css">
+
     <!-- Include Leaflet CSS and JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-    @* <div id="map" style="width: 800px; height: 600px;"></div> *@
-
-    <style>
-        body {
-            @* display: flex; *@
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #f0f8ff;
-            color: #333;
-        }
-
-        h2,
-        h3 {
-            margin: 10px 0;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 20px;
-        }
-
-        canvas {
-            border: 1px solid black;
-            background-color: #f4f4f4;
-        }
-
-        .status,
-        .controls {
-            margin: 10px;
-        }
-
-        .controls label {
-            margin-right: 5px;
-        }
-
-        .controls input {
-            margin-right: 10px;
-        }
-
-        .controls button {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-        }
-
-        .controls button:hover {
-            background-color: #45a049;
-        }
-
-        #chartContainer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 400px;
-        }
-
-        canvas {
-            margin-bottom: 10px;
-        }
-
-        #notification {
-            margin: 10px;
-            color: red;
-            font-weight: bold;
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .selected-uav {
-            stroke: blue;
-            stroke-width: 2;
-        }
-
-        #uavSpeedLabel {
-            margin-left: 10px;
-        }
-
-        #uavPathButton {
-            margin-top: 10px;
-            background-color: #2196F3;
-        }
-
-        #statsTableContainer {
-            margin-top: 20px;
-            width: 100%;
-        }
-
-        #statsTable {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-        }
-
-        #statsTable th,
-        #statsTable td {
-            padding: 8px;
-            border: 1px solid #ccc;
-        }
-
-        #statsTable th {
-            background-color: #f4f4f4;
-        }
-    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
@@ -449,27 +336,23 @@
 
         function updateAltitudeChart() {
             const avgAltitude = uavs.reduce((sum, uav) => sum + uav.altitude, 0) / uavs.length;
-
-            // Cập nhật dữ liệu đồ thị độ cao
-            const currentTime = stats.time.length;
-            stats.time.push(currentTime);
+            stats.time.push(stats.time.length);
             stats.altitude.push(avgAltitude.toFixed(2));
 
-            altitudeChart.data.labels.push(currentTime);
+            altitudeChart.data.labels.push(stats.time.length);
             altitudeChart.data.datasets[0].data.push(avgAltitude.toFixed(2));
-
             altitudeChart.update();
         }
 
+
         function updateStatsTable() {
             const statsTableBody = document.querySelector("#statsTable tbody");
-            statsTableBody.innerHTML = ""; // Xóa nội dung cũ
+            statsTableBody.innerHTML = ""; // Clear old data
 
             uavs.forEach((uav, index) => {
-                // Tính tốc độ hiện tại của UAV
                 const speed = Math.sqrt(uav.dx ** 2 + uav.dy ** 2).toFixed(2);
+                const communicationStatus = Math.random() * 100 < packetLossChance ? 'Failed' : 'Success';
 
-                // Tạo một hàng mới trong bảng
                 const row = `
             <tr>
                 <td>UAV ${index + 1}</td>
@@ -477,30 +360,12 @@
                 <td>${uav.y.toFixed(2)}</td>
                 <td>${uav.altitude.toFixed(2)}</td>
                 <td>${speed}</td>
+                <td>${communicationStatus}</td>
             </tr>
         `;
                 statsTableBody.insertAdjacentHTML("beforeend", row);
             });
-
-            // Thêm hàng tóm tắt (giá trị trung bình)
-            const avgAltitude =
-                uavs.reduce((sum, uav) => sum + uav.altitude, 0) / uavs.length;
-            const avgSpeed =
-                uavs.reduce((sum, uav) => sum + Math.sqrt(uav.dx ** 2 + uav.dy ** 2), 0) /
-                uavs.length;
-
-            const summaryRow = `
-        <tr>
-            <td><b>Trung bình</b></td>
-            <td>-</td>
-            <td>-</td>
-            <td><b>${avgAltitude.toFixed(2)}</b></td>
-            <td><b>${avgSpeed.toFixed(2)}</b></td>
-        </tr>
-    `;
-            statsTableBody.insertAdjacentHTML("beforeend", summaryRow);
         }
-
 
 
         function initializeUAVs() {
@@ -537,10 +402,39 @@
             showNotification('Configuration updated!', 'success');
         }
 
+        function lerp(start, end, t) {
+            return start + (end - start) * t;
+        }
+
+        uavs.forEach(uav => {
+            uav.x = lerp(uav.x, uav.targetX, 0.05);
+            uav.y = lerp(uav.y, uav.targetY, 0.05);
+        });
+
+        function drawCommunicationRange(uav) {
+            ctx.beginPath();
+            ctx.arc(uav.x, uav.y, uav.radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+
         document.addEventListener('DOMContentLoaded', () => {
             initializeUAVs();
             setInterval(updateUAVs, 100);
         });
+
+        canvas.addEventListener('click', (e) => {
+            if (isPathControlEnabled) {
+                const destinationX = e.offsetX;
+                const destinationY = e.offsetY;
+                const selectedUAV = uavs[0]; // Example: Select the first UAV
+                selectedUAV.dx = (destinationX - selectedUAV.x) / 100;
+                selectedUAV.dy = (destinationY - selectedUAV.y) / 100;
+            }
+        });
+
 
         // Add event listeners for mouse events
         canvas.addEventListener('mousedown', (event) => {
@@ -591,13 +485,25 @@
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     const osmData = e.target.result;
-                    parseOSMData(osmData);
+                    // Here, you can parse and process the OSM file as needed.
+                    // For example, use a library like osmtogeojson to convert OSM data to GeoJSON
+                    const geoJson = osmtogeojson(osmData);
+                    displayOSMDataOnMap(geoJson);
+                    showNotification('OSM File uploaded and processed successfully!', 'success');
                 };
                 reader.readAsText(file);
             } else {
-                alert('Please upload a valid OSM file.');
+                showNotification('Please upload a valid .osm file.', 'error');
             }
         }
+
+        function displayOSMDataOnMap(geoJson) {
+            const map = L.map('osmMap').setView([51.505, -0.09], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            L.geoJSON(geoJson).addTo(map);
+        }
+
 
         function parseOSMData(osmData) {
             const parser = new DOMParser();

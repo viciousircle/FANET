@@ -4,76 +4,75 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using System.Linq;
+using WebApplication2.Models; // Ensure to reference the UAV model namespace
 
 namespace WebApplication2.Pages
 {
-
     public class AddObjectModel : PageModel
     {
-        public class UAV
-        {
-            public int Id { get; set; }
-            public float X { get; set; }
-            public float Y { get; set; }
-            public float Z { get; set; }
-        }
-
-        public class UAVsList
-        {
-            public List<UAV> UAVs { get; set; }
-        }
+        // List of UAV objects, initialized to avoid null reference issues
+        public List<UAV> UAVs { get; set; } = new List<UAV>();
 
         [BindProperty]
         public IFormFile JsonFile { get; set; }
-        public List<UAV> UAVs { get; set; }
-        [BindProperty]
+
         public string GeoJsonData { get; set; }
 
-
+        // Action to handle file upload and parsing
         public async Task<IActionResult> OnPostAsync()
         {
             if (JsonFile == null || JsonFile.Length == 0)
             {
-                ModelState.AddModelError("", "Please upload a valid JSON file.");
+                ModelState.AddModelError("JsonFile", "Please upload a valid UAV JSON file.");
                 return Page();
             }
 
-            using (var reader = new StreamReader(JsonFile.OpenReadStream()))
+            // Parse UAV data from the uploaded file
+            try
             {
-                var json = await reader.ReadToEndAsync();
-                try
+                using (var stream = new MemoryStream())
                 {
-                    var uavsList = JsonConvert.DeserializeObject<UAVsList>(json);
-                    if (uavsList?.UAVs == null || uavsList.UAVs.Count == 0)
+                    await JsonFile.CopyToAsync(stream);
+                    stream.Position = 0;
+                    using (var reader = new StreamReader(stream))
                     {
-                        ModelState.AddModelError("", "The JSON file does not contain UAV data.");
-                        return Page();
+                        var json = await reader.ReadToEndAsync();
+                        UAVs = JsonConvert.DeserializeObject<List<UAV>>(json) ?? new List<UAV>();  // Handle null response from JSON deserialization
                     }
-                    UAVs = uavsList.UAVs;
-                    HttpContext.Session.SetString("UAVData", JsonConvert.SerializeObject(UAVs));
                 }
-                catch (JsonException)
-                {
-                    ModelState.AddModelError("", "Invalid JSON format.");
-                }
+            }
+            catch (JsonException ex)
+            {
+                ModelState.AddModelError("JsonFile", $"Invalid JSON file: {ex.Message}");
+                return Page();
             }
 
             return Page();
         }
 
-        public async Task<IActionResult> OnPostSaveGeoJsonAsync()
+        // Handler to save GeoJSON data
+        public async Task<IActionResult> OnPostSaveGeoJsonAsync([FromBody] object geoJsonData)
         {
-            var geoJsonData = await new StreamReader(Request.Body).ReadToEndAsync();
-            HttpContext.Session.SetString("GeoJsonData", geoJsonData); // Save the GeoJSON data
-            return new JsonResult(new { success = true });
-        }
+            if (geoJsonData == null)
+            {
+                return new JsonResult(new { success = false, message = "GeoJSON data is required." });
+            }
 
+            try
+            {
+                // Save the GeoJSON to a file or database
+                await System.IO.File.WriteAllTextAsync("savedMap.geojson", geoJsonData.ToString());
 
-        public IActionResult OnGet()
-        {
-            GeoJsonData = HttpContext.Session.GetString("GeoJsonData");
-            UAVs = JsonConvert.DeserializeObject<List<UAV>>(HttpContext.Session.GetString("UAVData") ?? "[]");
-            return Page();
+                GeoJsonData = geoJsonData.ToString();
+                return new JsonResult(new { success = true });
+            }
+            catch (IOException ex)
+            {
+                return new JsonResult(new { success = false, message = $"Error saving GeoJSON: {ex.Message}" });
+            }
         }
     }
 }
+

@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets/css/site.css"
     },
     {
+      "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/css/test.css",
+      "PackagePath": "staticwebassets/css/test.css"
+    },
+    {
       "Id": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/data/strategies.json",
       "PackagePath": "staticwebassets/data/strategies.json"
     },

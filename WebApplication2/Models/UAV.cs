@@ -5,35 +5,94 @@ namespace WebApplication2.Models;
 
 public class UAV
 {
-    public int Id { get; set; }
-    public double[] Position { get; set; } // [x, y, z]
-    public double Energy { get; set; }
-    public List<int> Neighbors { get; set; }
-    public double CoverageRadius { get; set; }
-    public double Speed { get; set; }
-    public Dictionary<int, RouteTableEntry> RoutingTable { get; private set; }
+    // Thông số cơ bản của UAV
+    public string UAVId { get; set; }
+    public (double X, double Y, double Z) Position { get; set; }  // Vị trí trong không gian 3D
+    public double Speed { get; set; }  // Tốc độ
+    public double Direction { get; set; }  // Hướng di chuyển (Đơn vị: độ)
+    public double CommunicationRange { get; set; }  // Phạm vi liên lạc
+    public double EnergyLevel { get; set; }  // Mức năng lượng
 
-    public UAV(int id, double energy, double[] position, double coverageRadius, double speed)
+    // Thông số định tuyến
+    public Dictionary<string, RouteEntry> RoutingTable { get; set; }  // Bảng định tuyến
+
+    // Thông số chuyển giao
+    public double RSSIThreshold { get; set; }  // Ngưỡng tín hiệu
+    public List<UAV> NeighborUAVs { get; set; }  // Danh sách UAV lân cận
+    public double HandoverDelay { get; set; }  // Thời gian chuyển giao
+
+    // Thông số điều khiển
+    public ControlType ControlType { get; set; }  // Loại điều khiển
+    public bool IsLeader { get; set; }  // Có phải UAV leader không
+    public List<UAV> CandidatesForLeader { get; set; }  // Danh sách các UAV ứng viên cho leader
+
+    // Thông số nhiệm vụ
+    public string MissionType { get; set; }  // Loại nhiệm vụ
+    public double PayloadWeight { get; set; }  // Trọng tải của UAV
+    public int MissionPriority { get; set; }  // Mức độ ưu tiên của nhiệm vụ
+
+    public UAV(string uavId)
     {
-        Id = id;
-        Energy = energy;
-        Position = position;
-        CoverageRadius = coverageRadius;
-        Speed = speed;
-        Neighbors = new List<int>();
-        RoutingTable = new Dictionary<int, RouteTableEntry>();
+        UAVId = uavId;
+        RoutingTable = new Dictionary<string, RouteEntry>();
+        NeighborUAVs = new List<UAV>();
+        CandidatesForLeader = new List<UAV>();
     }
 
-    public void UpdateRoute(int destinationId, int nextHop, int hopCount)
+    // Các phương thức cần thiết
+    public void UpdatePosition(double x, double y, double z)
     {
-        if (!RoutingTable.ContainsKey(destinationId) || RoutingTable[destinationId].HopCount > hopCount)
+        Position = (x, y, z);
+    }
+
+    public void AddRoute(string destination, RouteEntry routeEntry)
+    {
+        RoutingTable[destination] = routeEntry;
+    }
+
+    public void AddNeighbor(UAV uav)
+    {
+        NeighborUAVs.Add(uav);
+    }
+
+    public void SetLeaderStatus(bool status)
+    {
+        IsLeader = status;
+    }
+
+    // Method to update an existing route
+    public void UpdateRoute(string destination, RouteEntry newRouteEntry)
+    {
+        if (RoutingTable.ContainsKey(destination))
         {
-            RoutingTable[destinationId] = new RouteTableEntry(destinationId, nextHop, hopCount, DateTime.Now.AddMinutes(5));
+            RoutingTable[destination] = newRouteEntry;  // Update existing route
+        }
+        else
+        {
+            RoutingTable.Add(destination, newRouteEntry);  // Add new route if it doesn't exist
         }
     }
+}
 
-    public string ToJson()
+
+public class RouteEntry
+{
+    public string Destination { get; set; }
+    public int HopCount { get; set; }
+    public double SequenceNumber { get; set; }
+    public DateTime ExpirationTime { get; set; }  // Thời gian tồn tại đường dẫn
+
+    public RouteEntry(string destination, int hopCount, double sequenceNumber, DateTime expirationTime)
     {
-        return Newtonsoft.Json.JsonConvert.SerializeObject(this);
+        Destination = destination;
+        HopCount = hopCount;
+        SequenceNumber = sequenceNumber;
+        ExpirationTime = expirationTime;
     }
+}
+
+public enum ControlType
+{
+    Centralized,
+    Distributed
 }

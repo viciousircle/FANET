@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "81MqtkITUO1iJXNKdzI1zYd/5y6m5O7IQ5yaSYtn7e8=",
+  "Hash": "mh2mvi5mMFQfPKdwg6qt8XLlZmptJ/dflTH6iVmIyiA=",
   "Source": "WebApplication2",
   "BasePath": "_content/WebApplication2",
   "Mode": "Default",
@@ -110,6 +110,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/css/site.css"
+    },
+    {
+      "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/css/test.css",
+      "SourceId": "WebApplication2",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/",
+      "BasePath": "_content/WebApplication2",
+      "RelativePath": "css/test.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/css/test.css"
     },
     {
       "Identity": "/Users/a8888/Desktop/WebApplication2/WebApplication2/wwwroot/data/strategies.json",

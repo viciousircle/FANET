@@ -23,10 +23,11 @@
 <!-- UAV Data Upload Form -->
 <h3>Upload UAV JSON File</h3>
 <form enctype="multipart/form-data" method="post" id="uavUploadForm">
-    <input type="file" name="JsonFile" accept=".json" onchange="this.form.submit()" />
+    <input type="file" name="JsonFile" accept=".json" />
+    <button type="submit">Upload UAV Data</button>
 </form>
 
-<!-- Choose map -->
+<!-- Choose Map -->
 <h3>Choose Map</h3>
 
 <!-- Radius Control -->
@@ -49,27 +50,49 @@
 }
 
 <!-- Display UAV Data -->
+<!-- Display UAV Data -->
 @if (Model.UAVs != null && Model.UAVs.Any())
 {
     <h3>UAV Data</h3>
     <table>
-    <tr>
-        <th>Id</th>
-        <th>X</th>
-        <th>Y</th>
-        <th>Z</th>
-    </tr>
-    @foreach (var uav in Model.UAVs)
-        {
-            <tr>
-                <td>@uav.Id</td>
-                <td>@uav.X</td>
-                <td>@uav.Y</td>
-                <td>@uav.Z</td>
-            </tr>
-        }
+    <thead>
+        <tr>
+            <th>UAV ID</th>
+            <th>Position X</th>
+            <th>Position Y</th>
+            <th>Position Z</th>
+            <th>Speed</th>
+            <th>Direction</th>
+            <th>Energy Level</th>
+            <th>Mission Type</th>
+            <th>Control Type</th>
+            <th>Is Leader</th>
+            <th>Mission Priority</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var uav in Model.UAVs)
+            {
+                <tr>
+                    <td>@uav.UAVId</td>
+                    <td>@uav.Position.X</td>
+                    <td>@uav.Position.Y</td>
+                    <td>@uav.Position.Z</td>
+                    <td>@uav.Speed</td>
+                    <td>@uav.Direction</td>
+                    <td>@uav.EnergyLevel</td>
+                    <td>@uav.MissionType</td>
+                    <td>@uav.ControlType</td>
+                    <td>@uav.IsLeader</td>
+                    <td>@uav.MissionPriority</td>
+                </tr>
+            }
+        </tbody>
     </table>
 }
+
+
+
 
 <!-- OSM Map Upload -->
 <h3>Upload and View OSM Map</h3>
@@ -85,7 +108,6 @@
 {
     <div style="color:green; font-weight: bold;">Map saved successfully!</div>
 }
-
 
 <a asp-page="/ChooseStrategies">Next Step</a>
 
@@ -186,7 +208,6 @@
         }
     });
 
-
     // Save GeoJSON Data
     document.getElementById('saveMapButton').addEventListener('click', function () {
         if (!buildingLayer) return alert('No map data to save.');
@@ -198,7 +219,12 @@
             body: JSON.stringify(geoJsonData)
         })
             .then(response => response.json())
-            .then(data => alert(data.success ? 'Map saved successfully!' : 'Failed to save map.'))
+            .then(data => {
+                alert(data.success ? 'Map saved successfully!' : 'Failed to save map.');
+                if (data.success) {
+                    clearMap();  // Clear map after saving
+                }
+            })
             .catch(error => console.error('Error saving map:', error));
     });
 </script>
