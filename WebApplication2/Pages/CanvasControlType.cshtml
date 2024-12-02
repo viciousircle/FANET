@@ -1,4 +1,74 @@
 ﻿@page
 @model WebApplication2.Pages.CanvasControlTypeModel
 @{
+    ViewData["Title"] = "Control Type";
+
 }
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/test.css">
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h2 class="status">UAV Network Simulation - Transmission Status</h2>
+
+    <!-- Form to adjust UAV configuration -->
+    <form method="post">
+        <label for="numUAVs">Number of UAVs:</label>
+        <input type="number" id="numUAVs" name="numUAVs" value="@Model.NumUAVs" min="1" max="20">
+
+        <label for="speed">UAV Speed:</label>
+        <input type="number" id="speed" name="speed" value="@Model.UAVSpeed" min="1" max="10">
+
+        <label for="radius">Communication Radius:</label>
+        <input type="number" id="radius" name="radius" value="@Model.CommunicationRadius" min="50" max="150">
+
+        <label for="packetLoss">Packet Loss Chance (%):</label>
+        <input type="number" id="packetLoss" name="packetLoss" value="@Model.PacketLossChance" min="0" max="100">
+
+        <button type="submit">Update Configuration</button>
+    </form>
+
+    <canvas id="uavCanvas" width="800" height="600" style="border:1px solid black;"></canvas>
+
+    <script>
+        // Inject UAVs data from the C# backend into the JavaScript
+        const uavs = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.UAVs));
+
+        console.log(uavs); // Log UAVs to verify the data
+
+        const canvas = document.getElementById('uavCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Function to draw UAVs
+        function drawUAVs() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            uavs.forEach(uav => {
+                // Draw the communication radius
+                ctx.beginPath();
+                ctx.arc(uav.X, uav.Y, uav.Radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.stroke();
+
+                // Draw the UAV as a red dot
+                ctx.beginPath();
+                ctx.arc(uav.X, uav.Y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+            });
+        }
+
+        // Call the drawing function on page load
+        document.addEventListener('DOMContentLoaded', drawUAVs);
+    </script>
+</body>
+
+</html>
